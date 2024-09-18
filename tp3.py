@@ -197,39 +197,35 @@ def ptos_suspensivos(mensaje=' Saliendo'):
 	sleep(2)
 
 ##INICIO
-def verificar_tipo(email, contraseña, tipo):
-	if tipo == 'usuario':
-		for i in range(ultimo_usuario):
-			if usuarios[i].email == email and usuarios[i].contraseña == contraseña and usuarios[i].estado == 'ACTIVO':
-				return i
-	elif tipo == 'moderador':
-		for i in range(len(moderadores)):
-			if moderadores[i].email == email and moderadores[i].contraseña == contraseña:
-				return i
+def verificar_tipo(email, contraseña):
+	global opc_modo
+	for i in range(ultimo_usuario):
+		if usuarios[i].email == email and usuarios[i].contraseña == contraseña and usuarios[i].estado == 'ACTIVO':
+			opc_modo = 1
+			return i
+	for i in range(len(moderadores)):
+		if moderadores[i].email == email and moderadores[i].contraseña == contraseña:
+			opc_modo = 2
+			return i
 	return -1
 
-def login(modo):
-	indice = -1
-	cont = 0
+def login():
+	cont_intentos = 0
 	
 	limpiar()
 	print(' Log in  |')
 	print('----------\n')
 
-	while cont < 3:
+	while cont_intentos < 3:
 		email = input(' Ingrese su email: ')
 		contraseña = pwinput(' Ingrese su contraseña: ')
 
-		if modo == 1: 
-			indice = verificar_tipo(email, contraseña, 'usuario')
-		else: 
-			indice = verificar_tipo(email, contraseña, 'moderador')
-
+		indice = verificar_tipo(email, contraseña)
 		if indice == -1:
 			mensaje_error('El email y/o contraseña son incorrectos')
 		else:
 			return indice
-		cont += 1
+		cont_intentos += 1
 
 	print('\n Maximo de intentos alcanzado')
 	sleep(2)
@@ -714,19 +710,15 @@ while opcion != 0:
 		elif opcion == 1: 
 			limpiar()
 			print(menu_inicio_login)
-			
+
 			opc_modo = 0
 			while opc_modo != 1 and opc_modo != 2:
-				try:
-					opc_modo = int(input(' Quiere iniciar como?: '))
-					if opc_modo == 1:
-						pagina_usuario(login(opc_modo))
-					elif opc_modo == 2: 
-						if login(opc_modo) != -1: pagina_moderador()
-					else: mensaje_error('Ingrese una opcion valida')
-
-				except ValueError:
-					mensaje_error('Ingrese un numero entero')
+				indice = login()
+				if opc_modo == 1:
+					pagina_usuario(indice)
+				elif opc_modo == 2: 
+					if indice != -1: pagina_moderador()
+				else: mensaje_error('Ingrese una opcion valida')
 		elif opcion == 2:
 			if ultimo_usuario == 20: mensaje_error('No hay espacio en la base de datos')
 			else: pagina_usuario(signup())

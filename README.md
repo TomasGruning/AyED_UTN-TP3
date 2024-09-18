@@ -1,4 +1,4 @@
-﻿![](images/logo.png)
+﻿﻿![](images/logo.png)
 
 UNIVERSIDAD TECNOLÓGICA NACIONAL FACULTAD REGIONAL ROSARIO 
 
@@ -9,11 +9,11 @@ En este TP3 vamos a introducir el concepto de registros y archivos.
 
 Deben realizar la codificación en lenguaje Python de lo requerido para este TP3. 
 
-Junto al código de Python, indicar claramente la declarativa de variables ulizadas, en especial, las referidas a las variables del tipo registros, archivos y arrays de registros. 
+Junto al código de Python, indicar claramente la declarativa de variables utilizadas, en especial, las referidas a las variables del tipo registros, archivos y arrays de registros. 
 
-Tener en cuenta al implementar los archivos en Python, respetar el marco teórico de la cátedra sobre archvios, es decir, se debe ulizar la librería _pickle_, y los archivos deben contener registros del mismo tamaño dentro de cada fila. 
+Tener en cuenta al implementar los archivos en Python, respetar el marco teórico de la cátedra sobre archivos, es decir, se debe utilizar la librería _pickle_, y los archivos deben contener registros del mismo tamaño dentro de cada fila. 
 
-Antes de comenzar con este TP, por favor leer el documento **Enunciado General** de manera completa,  para  saber  de  que  va  el  negocio,  y  entender  el  modelo  de  datos  requerido. Es obligatoria tambien la lectura de las  **preguntas frecuentes**, para evitar prácticas que resten puntos al momento de la entrega. 
+Antes de comenzar con este TP, por favor leer el documento **Enunciado General** de manera completa,  para  saber  de  que  va  el  negocio,  y  entender  el  modelo  de  datos  requerido. Es obligatoria también la lectura de las  **preguntas frecuentes**, para evitar prácticas que resten puntos al momento de la entrega. 
 
 # Desarrollo 
 En esta tercera etapa deberán realizar lo siguiente: 
@@ -31,14 +31,14 @@ En esta tercera etapa deberán realizar lo siguiente:
 Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincide con un usuario guardado, y el mismo es del tipo **Estudiante**, deberán mostrar el menú completo correspondiente a un usuario de ese tipo: 
 
 <ol>
-  <li>Gesonar mi perfil
+  <li>Gestionar mi perfil
     <ol type="a">
       <li>Editar mis datos personales</li>
       <li>Eliminar mi perfil</li>
       <li>Volver</li>
     </ol>
   </li>
-  <li>Gesonar candidatos
+  <li>Gestionar candidatos
     <ol type="a">
       <li>Ver candidatos</li>
       <li>Reportar un candidato</li>
@@ -59,8 +59,8 @@ Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincid
 Tener en cuenta que apenas se ejecuta el programa, solamente se verán las opciones: 
 
 <ol>
-  <li>Gesonar mi perfil</li>
-  <li>Gesonar candidatos</li>
+  <li>Gestionar mi perfil</li>
+  <li>Gestionar candidatos</li>
   <li>Matcheos</li>
   <li>Reportes estadísticos</li>
   <li value="0">Salir</li>
@@ -77,7 +77,7 @@ Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincid
       <li>Volver</li>
       </ol>
    </li>
-   <li>Gesonar reportes
+   <li>Gestionar reportes
       <ol type="a">
       <li>Ver reportes</li>
       <li>Volver</li>
@@ -89,7 +89,7 @@ Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincid
 Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincide con un usuario guardado, y el mismo es del tipo **Administrador**,  deberán  mostrar  el  menú  completo correspondiente a un usuario de ese tipo: 
 
 <ol>
-  <li>Gesonar usuarios
+  <li>Gestionar usuarios
     <ol type="a">
       <li>Editar un usuario o moderador</li>
       <li>Dar de alta un moderador</li>
@@ -97,7 +97,7 @@ Si el usuario que ingresa (por medio de su nombre de usuario y su clave) coincid
       <li>Volver</li>
     </ol>
   </li>
-  <li>Gesonar reportes
+  <li>Gestionar reportes
     <ol type="a">
       <li>Ver reportes</li>
       <li>Volver</li>
@@ -114,13 +114,13 @@ Si  no  existen  likes  cargados,  desarrollar  un  procedimiento  que  se  llam
 Para esta tercera etapa, se pedirán realizar los módulos:  
 
 <ol>
-  <li>Gesonar mi perfil
+  <li>Gestionar mi perfil
     <ol type="a">
       <li>Editar mis datos personales</li>
       <li>Eliminar mi perfil</li>
     </ol>
   </li>
-  <li>Gesonar candidatos
+  <li>Gestionar candidatos
     <ol type="a">
       <li>Ver candidatos</li>
       <li>Reportar un candidato</li>
@@ -135,11 +135,11 @@ El resto de las opciones deberán mostrar un cartel aclaratorio que diga “En C
 
 **1.b Eliminar mi perfil:** mostrar un cartel aclaratorio, preguntando confirmación si realmente se desea eliminar el perfil. En caso de elegir la opción “si”, cambiar el estado del usuario por inactivo, y volver a la pantalla de login del trabajo. 
 
-**2.a Ver candidatos:** al ingresar a esta opción, se deben mostrar todos los estudiantes. Mostrar nombre, fecha de nacimiento, edad, biografía y hobbies. Una vez mostrada toda la información, permir ingresar en una variable me-gusta el nombre del estudiante con el cual le gustaría en un futuro hacer un Matcheo. Verificar que el nombre sea correcto. 
+**2.a Ver candidatos:** al ingresar a esta opción, se deben mostrar todos los estudiantes. Mostrar nombre, fecha de nacimiento, edad, biografía y hobbies. Una vez mostrada toda la información, permitir ingresar en una variable me-gusta el nombre del estudiante con el cual le gustaría en un futuro hacer un Matcheo. Verificar que el nombre sea correcto. 
 
 Para mostrar la edad, sabiendo que la fecha de nacimiento se guarda como string en el formato YYYY-MM-DD siendo YYYY el año, MM el mes y DD el día (ej: el 1 de diciembre de 2002 sería 2002-12-01), calcular y mostrar la edad del candidato. 
 
-Se recomienda guardar en un archivo un tipo de registro Like, donde se guarde el Id del remitente del like (quién lo dio) y el Id del desnatario (a quién). Codificar dos funciones auxiliares, una para saber si una persona le dio like a otra (usando los IDs de ambos como parámetros), y otra para saber  si  dos  personas  tienen  likes  correspondidos  (también  usando  ambos  IDs  como parámetros=. 
+Se recomienda guardar en un archivo un tipo de registro Like, donde se guarde el Id del remitente del like (quién lo dio) y el Id del destinatario (a quién). Codificar dos funciones auxiliares, una para saber si una persona le dio like a otra (usando los IDs de ambos como parámetros), y otra para saber  si  dos  personas  tienen  likes  correspondidos  (también  usando  ambos  IDs  como parámetros=. 
 
 |   | remitente | destinatario |
 |:-:|:---------:|:------------:|
@@ -157,7 +157,7 @@ En este ejemplo: el Id 0 le ha dado me gusta a 3 estudiantes, al 1, al 2 y al 3.
 
 **2.b Reportar un Candidato:** al ingresar a esta sección, se deberá pedir el ID o nombre de usuario (cualquiera de los dos) de un candidato, y el motivo por el cual se está reportando al mismo. Validar que el candidato exista, y dar de alta un reporte con el ID del usuario actual como reportante, el ID del usuario reportado, el motivo dado y el estado inicial 0  *(ver sección 2.a de moderadores para obtener más información acerca de los distintos estados de un reporte).*
 
-**4. Reportes Estadíscos:** mostrar con qué porcentaje de todos los candidatos posibles (disntos a nosotros) se matcheo ambas veces, a cuántos le pusimos “me gusta” pero no nos han devuelto el match, y cuántos estudiantes nos dieron “me gusta”, a los cuáles nosotros no le hemos dado “me gusta todavía”. Mostrarlo de la siguiente forma: 
+**4. Reportes Estadísticos:** mostrar con qué porcentaje de todos los candidatos posibles (distintos a nosotros) se matcheo ambas veces, a cuántos le pusimos “me gusta” pero no nos han devuelto el match, y cuántos estudiantes nos dieron “me gusta”, a los cuáles nosotros no le hemos dado “me gusta todavía”. Mostrarlo de la siguiente forma: 
 
 Matcheados sobre el % posible: 50% <br/>
 Likes dados y no recibidos: 2 <br/>
@@ -167,13 +167,13 @@ Likes recibidos y no respondidos: 3
 Para esta tercera etapa, se pedirán realizar los módulos: 
 
 <ol>
-  <li>Gesonar usuarios
+  <li>Gestionar usuarios
     <ol type="a">
       <li>Desactivar usuario</li>
       <li>Volver</li>
     </ol>
   </li>
-  <li>Gesonar candidatos
+  <li>Gestionar candidatos
     <ol type="a">
       <li>Ver reportes</li>
       <li>Volver</li>
@@ -186,13 +186,13 @@ Para esta tercera etapa, se pedirán realizar los módulos:
 
 **2.a Ver reportes:** los reportes pueden tener como estado 0, 1 y 2. 0 quiere decir que el reporte todavía no ha sido visto por un moderador o un administrador, 1 quiere decir que el reporte ha sido tomado y el reportado ha sido desactivado, y 2 quiere decir que el reporte ha sido ignorado. 
 
-Se mostrarán los reportes los cuáles tanto el usuario reportante como el reportado están activos, y que tengan un estado = 0. Por cada reporte, se preguntará cómo se quiere proceder: ignorar reporte o bloquear al reportante. En caso de seleccionar la primer opción, el estado del reporte será actualizado a 2. En caso de seleccionar la segunda opción, el estado del reporte será actualizado a 1, y el usuario reportado será desacvado (su estado será inacvo ). 
+Se mostrarán los reportes los cuáles tanto el usuario reportante como el reportado están activos, y que tengan un estado = 0. Por cada reporte, se preguntará cómo se quiere proceder: ignorar reporte o bloquear al reportante. En caso de seleccionar la primer opción, el estado del reporte será actualizado a 2. En caso de seleccionar la segunda opción, el estado del reporte será actualizado a 1, y el usuario reportado será desactivado (su estado será inactivo ). 
 
 ## Módulo 3: Administradores 
 Además de todo lo referido a moderadores, se pedirá en esta tercera etapa agregar las secciones descritas en negrita: 
 
 <ol>
-  <li>Gesonar usuarios
+  <li>Gestionar usuarios
     <ol type="a">
       <li><strong>Eliminar un usuario o moderador</strong></li>
       <li><strong>Dar de alta un moderador</strong></li>
@@ -223,7 +223,7 @@ Además de todo lo referido a moderadores, se pedirá en esta tercera etapa agre
 - El moderador que mayor cantidad de reportes ha procesado (ignorados + aceptados)<br/><br/>
 
 # Bonus Track 1: puntuando candidatos 
-Se desea realizar un algoritmo que nos permita darle un “puntaje” a los candidatos, de acuerdo a la candad de likes recibidos y dados. Vamos a llamar like “correspondido” a un match, en otras palabras, si le damos like a otra persona, y esa persona nos dio like a nosotros va a ser un like “correspondido”. 
+Se desea realizar un algoritmo que nos permita darle un “puntaje” a los candidatos, de acuerdo a la cantidad de likes recibidos y dados. Vamos a llamar like “correspondido” a un match, en otras palabras, si le damos like a otra persona, y esa persona nos dio like a nosotros va a ser un like “correspondido”. 
 
 Se desea recorrer secuencialmente el archivo de likes. Si encontramos un like dado por el candidato y correspondido por la otra persona, sumarle 1 punto. Si encontramos 1 like que fue dado y no correspondido, restarle 1 punto. 
 
@@ -232,9 +232,9 @@ Además, se desea dar 1 punto más si la “racha” de likes correspondida es m
 Emitir un listado de candidatos según su puntaje , que sólo podrán ver los administradores. 
 
 # Bonus Track 2: super-like 
-Al registrarse un nuevo estudiante, se le podrá asignar 1 “super-like”. Al ver los candidatos, el usuario podrá ulizarlo con cualquier persona. Al dar un “super like”, automácamente el like que dé, va a ser correspondido (aunque la otra persona no haya dado like, automácamente se realizará el match). 
+Al registrarse un nuevo estudiante, se le podrá asignar 1 “super-like”. Al ver los candidatos, el usuario podrá utilizarlo con cualquier persona. Al dar un “super like”, automáticamente el like que dé, va a ser correspondido (aunque la otra persona no haya dado like, automáticamente se realizará el match). 
 
-En otras palabras, completar acá automácamente 2 registros para que haya matcheo, o sea, 1 registro con el like que dé el estudiante que tenga el 'super-like', y el otro registro para que tenga su correspondencia automática , es decir, Ida y vuelta. Como si al que le diste like te devuelve el like automáticamente . 
+En otras palabras, completar acá automáticamente 2 registros para que haya matcheo, o sea, 1 registro con el like que dé el estudiante que tenga el 'super-like', y el otro registro para que tenga su correspondencia automática , es decir, Ida y vuelta. Como si al que le diste like te devuelve el like automáticamente . 
 
 # Bonus Track 3: revelar candidato 
 Al registrarse un nuevo estudiante, se le otorgarán 1 crédito para “revelar candidatos”. Si el estudiante aún no ha ulizado dicho crédito, se mostrará una nueva opción en el menú, justo debajo de “ver candidatos”, que mostrará hasta 3 personas que le han dado like al estudiante logueado (y que no hayan sido correspondidos aún por este). 
