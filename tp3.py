@@ -134,7 +134,7 @@ else:
 	usuarios[3].fecha_nacimiento = '2004-12-09'
 
 	usuarios[4].nombre = 'Joaquin'
-	usuarios[4].email = 'estudiante2@ayed.com'
+	usuarios[4].email = 'estudiante5@ayed.com'
 	usuarios[4].contraseña = '999101010'
 	usuarios[4].fecha_nacimiento = '2005-01-27'
 	
@@ -236,6 +236,14 @@ def login(modo):
 	ptos_suspensivos()
 	return indice
 
+def emailRep(email):
+	for n in range(ultimo_usuario):
+		if usuarios[n].email == email: return True
+	i = 0
+	while moderadores[i].email:
+		if moderadores[i].email == email: return True
+		i += 1
+	return False
 def signup():
 	global ultimo_usuario
 	limpiar()
@@ -248,33 +256,37 @@ def signup():
 		nombre = input(' Ingrese su nombre de usuario: ')
 
 	email = input(' Ingrese su email: ')
-	contraseña = input(' Ingrese su contraseña: ')
+	while emailRep(email):
+		mensaje_error('El email ya se encuentra registrado')
+		email = input(' Ingrese su email: ')
+	else:
+		contraseña = input(' Ingrese su contraseña: ')
 
-	fecha_nacimiento = input(' Ingrese su fecha de nacimiento (YYYY-MM-DD): ')
-	while not calcular_edad(fecha_nacimiento): 
 		fecha_nacimiento = input(' Ingrese su fecha de nacimiento (YYYY-MM-DD): ')
+		while not calcular_edad(fecha_nacimiento): 
+			fecha_nacimiento = input(' Ingrese su fecha de nacimiento (YYYY-MM-DD): ')
 
-	biografia = input(' Ingrese una biografia: ')
-	hobbies = input(' Ingrese sus hobbies: ')
+		biografia = input(' Ingrese una biografia: ')
+		hobbies = input(' Ingrese sus hobbies: ')
 
-	usuarios[ultimo_usuario].id = ultimo_usuario
-	usuarios[ultimo_usuario].estado = 'ACTIVO'
-	usuarios[ultimo_usuario].nombre = nombre
-	usuarios[ultimo_usuario].email = email
-	usuarios[ultimo_usuario].contraseña = contraseña
-	usuarios[ultimo_usuario].fecha_nacimiento = fecha_nacimiento
-	usuarios[ultimo_usuario].biografia = biografia
-	usuarios[ultimo_usuario].hobbies = hobbies
-	ultimo_usuario += 1
+		usuarios[ultimo_usuario].id = ultimo_usuario
+		usuarios[ultimo_usuario].estado = 'ACTIVO'
+		usuarios[ultimo_usuario].nombre = nombre
+		usuarios[ultimo_usuario].email = email
+		usuarios[ultimo_usuario].contraseña = contraseña
+		usuarios[ultimo_usuario].fecha_nacimiento = fecha_nacimiento
+		usuarios[ultimo_usuario].biografia = biografia
+		usuarios[ultimo_usuario].hobbies = hobbies
+		ultimo_usuario += 1
 
-	alUsuarios = open(afUsuarios, "w+b")
-	pickle.dump(usuarios, alUsuarios)
-	alUsuarios.close()
+		alUsuarios = open(afUsuarios, "w+b")
+		pickle.dump(usuarios, alUsuarios)
+		alUsuarios.close()
 
-	print('\n Registrado')
-	sleep(1)
-	ptos_suspensivos()
-	return i
+		print('\n Registrado')
+		sleep(1)
+		ptos_suspensivos()
+		return i
 	
 ##MENUS
 def ingresar_menu(menu: str, opciones=[0, 1, 2, 4]):
@@ -325,7 +337,6 @@ def calcular_edad(fecha_nacimiento: str):
 		return edad
 def mostrar_usuario(us: Usuario):
 	print (
-		f' ID: {us.id}\n'
 		f' Nombre: {us.nombre}\n'
 		f' Fecha de nacimiento: {us.fecha_nacimiento}\n'
 		f' Edad: {calcular_edad(us.fecha_nacimiento)} años\n'
@@ -348,6 +359,10 @@ def editar_datos(indice):
 	usuarios[indice].biografia = biografia
 	usuarios[indice].hobbies = hobbies
 
+	alUsuarios = open(afUsuarios, "w+b")
+	pickle.dump(usuarios, alUsuarios)
+	alUsuarios.close()
+
 def eliminar_perfil(indice):
 	print('')
 	cont = 0
@@ -361,6 +376,11 @@ def eliminar_perfil(indice):
 			if confirmar == 'S':
 				ptos_suspensivos(' Eliminando usuario')
 				usuarios[indice].estado = 'INACTIVO'
+
+				alUsuarios = open(afUsuarios, "w+b")
+				pickle.dump(usuarios, alUsuarios)
+				alUsuarios.close()
+
 				print(' Listo') 
 				sleep(4)
 				return True
@@ -724,8 +744,3 @@ while opcion != 0:
 	except ValueError:
 		mensaje_error('Ingrese un numero entero')
 print('')
-
-# Modifica los archivos antes de cerrarlos
-alUsuarios = open(afUsuarios, "w+b")
-pickle.dump(usuarios, alUsuarios)
-alUsuarios.close()
