@@ -96,90 +96,121 @@ class Usuario:
 class Moderador:
 	def __init__(self):
 		self.id = None
+		self.estado = None
 		self.email = None
 		self.contraseña = None
 
-##USUARIOS
+class Reporte:
+	def __init__(self):
+		self.id_reportante = None
+		self.id_reportado = None
+		self.motivo = ''
+		self.estado = None
+
 afUsuarios = './usuarios.dat'
-usuarios = [Usuario() for n in range(20)]
-
-if path.exists(afUsuarios):
-	alUsuarios = open(afUsuarios, "r+b")
-	usuarios = pickle.load(alUsuarios)
-else:
-	alUsuarios = open(afUsuarios, "w+b")
-
-	for n in range(5): 
-		usuarios[n].id = n
-		usuarios[n].estado = 'ACTIVO'
-
-	usuarios[0].nombre = 'Tomas'
-	usuarios[0].email = 'estudiante1@ayed.com'
-	usuarios[0].contraseña = '111222'
-	usuarios[0].fecha_nacimiento = '2005-03-07'
-
-	usuarios[1].nombre = 'Lucia'
-	usuarios[1].email = 'estudiante2@ayed.com'
-	usuarios[1].contraseña = '333444'
-	usuarios[1].fecha_nacimiento = '2001-06-23'
-
-	usuarios[2].nombre = 'Agustin'
-	usuarios[2].email = 'estudiante3@ayed.com'
-	usuarios[2].contraseña = '555666'
-	usuarios[2].fecha_nacimiento = '2003-09-19'
-
-	usuarios[3].nombre = 'Martina'
-	usuarios[3].email = 'estudiante4@ayed.com'
-	usuarios[3].contraseña = '777888'
-	usuarios[3].fecha_nacimiento = '2004-12-09'
-
-	usuarios[4].nombre = 'Joaquin'
-	usuarios[4].email = 'estudiante5@ayed.com'
-	usuarios[4].contraseña = '999101010'
-	usuarios[4].fecha_nacimiento = '2005-01-27'
-	
-	pickle.dump(usuarios, alUsuarios)
-alUsuarios.close()	
-
-ultimo_usuario = 0
-for i in usuarios: 
-	if i.id != None: ultimo_usuario += 1
-
-##MODERADORES
 afModeradores = './moderadores.dat'
+afLikes = './likes.dat'
+afReportes = './reportes.dat'
+
+usuarios = [Usuario() for n in range(20)]
 moderadores = [Moderador() for n in range(10)]
+likes = [[0]*20 for n in range(20)]
+cant_usuarios, cant_reportes = 0, 0
 
-if path.exists(afModeradores):
-	alModeradores = open(afModeradores, "r+b")
-	moderadores = pickle.load(alModeradores)
-else:
-	alModeradores = open(afModeradores, "w+b")
+reportes = [Reporte() for n in range(60)]
 
-	for n in range(3): moderadores[n].id = n
-	moderadores[0].email = 'moderador1@ayed.com'
-	moderadores[0].contraseña = 'mod111222'
+def inicializacion():
+	global afUsuarios, afModeradores, afLikes
+	global usuarios, reportes, moderadores, likes, cant_usuarios, cant_reportes
+	
+	if path.exists(afUsuarios):
+		alUsuarios = open(afUsuarios, "r+b")
+		usuarios = pickle.load(alUsuarios)
+	else:
+		alUsuarios = open(afUsuarios, "w+b")
 
-	moderadores[1].email = 'moderador2@ayed.com'
-	moderadores[1].contraseña = 'mod333444'
+		for n in range(5): 
+			usuarios[n].id = n
+			usuarios[n].estado = 'ACTIVO'
 
-	moderadores[2].email = 'moderador3@ayed.com'
-	moderadores[2].contraseña = 'mod555666'
-	pickle.dump(moderadores, alModeradores)
-alModeradores.close()
+		usuarios[0].nombre = 'Tomas'
+		usuarios[0].email = 'estudiante1@ayed.com'
+		usuarios[0].contraseña = '111222'
+		usuarios[0].fecha_nacimiento = '2005-03-07'
 
-##EXTRAS
-reportes_candidatos = [[-1]*3 for n in range(24)]
-motivos_reportes = [None for n in range(24)]
+		usuarios[1].nombre = 'Lucia'
+		usuarios[1].email = 'estudiante2@ayed.com'
+		usuarios[1].contraseña = '333444'
+		usuarios[1].fecha_nacimiento = '2001-06-23'
 
-likes = [[0]*ultimo_usuario for n in range(ultimo_usuario)]
-for i in range(ultimo_usuario):
-	for e in range(ultimo_usuario):
-		if usuarios[i].estado == 'ACTIVO' and usuarios[e].estado == 'ACTIVO' and i != e:
-			likes[i][e] = randint(0, 1)
-			likes[e][i] = randint(0, 1)
-		else:
-			likes[i][e] = -1
-			likes[e][i] = -1
+		usuarios[2].nombre = 'Agustin'
+		usuarios[2].email = 'estudiante3@ayed.com'
+		usuarios[2].contraseña = '555666'
+		usuarios[2].fecha_nacimiento = '2003-09-19'
+
+		usuarios[3].nombre = 'Martina'
+		usuarios[3].email = 'estudiante4@ayed.com'
+		usuarios[3].contraseña = '777888'
+		usuarios[3].fecha_nacimiento = '2004-12-09'
+
+		usuarios[4].nombre = 'Joaquin'
+		usuarios[4].email = 'estudiante5@ayed.com'
+		usuarios[4].contraseña = '999101010'
+		usuarios[4].fecha_nacimiento = '2005-01-27'
+		
+		pickle.dump(usuarios, alUsuarios)
+	alUsuarios.close()
+
+	for i in usuarios: 
+		if i.id != None: cant_usuarios += 1
+
+	if path.exists(afModeradores):
+		alModeradores = open(afModeradores, "r+b")
+		moderadores = pickle.load(alModeradores)
+	else:
+		alModeradores = open(afModeradores, "w+b")
+		
+		for n in range(3): 
+			moderadores[n].id = n
+			moderadores[n].estado = 'ACTIVO'
+
+		moderadores[0].email = 'moderador1@ayed.com'
+		moderadores[0].contraseña = 'mod111222'
+
+		moderadores[1].email = 'moderador2@ayed.com'
+		moderadores[1].contraseña = 'mod333444'
+
+		moderadores[2].email = 'moderador3@ayed.com'
+		moderadores[2].contraseña = 'mod555666'
+		pickle.dump(moderadores, alModeradores)
+	alModeradores.close()
+	
+	if path.exists(afLikes):
+		alLikes = open(afLikes, "r+b")
+		likes = pickle.load(alLikes)
+	else:
+		alLikes = open(afLikes, "w+b")
+
+		for i in range(cant_usuarios):
+			for e in range(cant_usuarios):
+				if usuarios[i].estado == 'ACTIVO' and usuarios[e].estado == 'ACTIVO' and i != e:
+					likes[i][e] = randint(0, 1)
+					likes[e][i] = randint(0, 1)
+				else:
+					likes[i][e] = -1
+					likes[e][i] = -1
+
+		pickle.dump(likes, alLikes)
+	alLikes.close()
+
+	if path.exists(afReportes):
+		alReportes = open(afReportes, "r+b")
+		reportes = pickle.load(alReportes)
+		for i in reportes:
+			if i.estado != None: cant_reportes += 1
+			print(i.id_reportante, i.id_reportado, i.estado, i.motivo, cant_reportes) 
+	
+		alReportes.close()
 
 #FUNCIONES
 ##ESTETICA
@@ -199,12 +230,12 @@ def ptos_suspensivos(mensaje=' Saliendo'):
 ##INICIO
 def verificar_tipo(email, contraseña):
 	global opc_modo
-	for i in range(ultimo_usuario):
+	for i in range(cant_usuarios):
 		if usuarios[i].email == email and usuarios[i].contraseña == contraseña and usuarios[i].estado == 'ACTIVO':
 			opc_modo = 1
 			return i
 	for i in range(len(moderadores)):
-		if moderadores[i].email == email and moderadores[i].contraseña == contraseña:
+		if moderadores[i].email == email and moderadores[i].contraseña == contraseña and moderadores[i].estado == 'ACTIVO':
 			opc_modo = 2
 			return i
 	return -1
@@ -233,7 +264,7 @@ def login():
 	return indice
 
 def emailRep(email):
-	for n in range(ultimo_usuario):
+	for n in range(cant_usuarios):
 		if usuarios[n].email == email: return True
 	i = 0
 	while moderadores[i].email:
@@ -241,7 +272,7 @@ def emailRep(email):
 		i += 1
 	return False
 def signup():
-	global ultimo_usuario
+	global cant_usuarios
 	limpiar()
 	print(' Sign up  |')
 	print('-----------\n')
@@ -265,15 +296,28 @@ def signup():
 		biografia = input(' Ingrese una biografia: ')
 		hobbies = input(' Ingrese sus hobbies: ')
 
-		usuarios[ultimo_usuario].id = ultimo_usuario
-		usuarios[ultimo_usuario].estado = 'ACTIVO'
-		usuarios[ultimo_usuario].nombre = nombre
-		usuarios[ultimo_usuario].email = email
-		usuarios[ultimo_usuario].contraseña = contraseña
-		usuarios[ultimo_usuario].fecha_nacimiento = fecha_nacimiento
-		usuarios[ultimo_usuario].biografia = biografia
-		usuarios[ultimo_usuario].hobbies = hobbies
-		ultimo_usuario += 1
+		usuarios[cant_usuarios].id = cant_usuarios
+		usuarios[cant_usuarios].estado = 'ACTIVO'
+		usuarios[cant_usuarios].nombre = nombre
+		usuarios[cant_usuarios].email = email
+		usuarios[cant_usuarios].contraseña = contraseña
+		usuarios[cant_usuarios].fecha_nacimiento = fecha_nacimiento
+		usuarios[cant_usuarios].biografia = biografia
+		usuarios[cant_usuarios].hobbies = hobbies
+		cant_usuarios += 1
+
+		# Actualiza la matriz de likes
+		for n in range(cant_usuarios):
+			if n == cant_usuarios-1:
+				likes[n][n] = -1
+			else:
+				likes[n][cant_usuarios] = 0
+				likes[cant_usuarios][n] = 0
+
+		alLikes = open(afLikes, "w+b")
+		pickle.dump(likes, alLikes)
+		alLikes.close()
+		#
 
 		alUsuarios = open(afUsuarios, "w+b")
 		pickle.dump(usuarios, alUsuarios)
@@ -281,8 +325,8 @@ def signup():
 
 		print('\n Registrado')
 		sleep(1)
-		ptos_suspensivos()
-		return i
+		ptos_suspensivos(' Ingresando')
+		return cant_usuarios-1
 	
 ##MENUS
 def ingresar_menu(menu: str, opciones=[0, 1, 2, 4]):
@@ -362,7 +406,7 @@ def editar_datos(indice):
 def eliminar_perfil(indice):
 	print('')
 	cont = 0
-	for i in range(ultimo_usuario):
+	for i in range(cant_usuarios):
 		if usuarios[i].estado == 'ACTIVO': cont += 1
 
 	if cont > 4:
@@ -391,35 +435,30 @@ def eliminar_perfil(indice):
 
 def ver_candidatos(indice):
 	limpiar()
-	for i in range(ultimo_usuario):
+	for i in range(cant_usuarios):
 		if i != indice and usuarios[i].estado == 'ACTIVO':
 			mostrar_usuario(usuarios[i])
 
 	while True:
 		me_gusta = input('\n Ingrese el nombre de un estudiante: ').capitalize()
 
-		for i in range(ultimo_usuario):
+		for i in range(cant_usuarios):
 			if usuarios[i].nombre == me_gusta and usuarios[indice].nombre != me_gusta:
 				likes[indice][i] = 1
+				alLikes = open(afLikes, "w+b")
+				pickle.dump(likes, alLikes)
+				alLikes.close()
+
 				print('\n Usuario guardado como posible match')
 				sleep(1.5)
 				ptos_suspensivos()
 				return 0
 		mensaje_error('El nombre no coincide con ningun usuario')
 
-def ultimo_reporte():
-	cont = 0
-	for i in range(len(motivos_reportes)):
-		if motivos_reportes[i]: cont += 1
-	
-	if cont < len(motivos_reportes):
-		return cont
-	else:
-		return -1
 def reportar_candidato(indice):
-	espacioDisponible = ultimo_reporte()
-
-	if espacioDisponible == -1:
+	global cant_reportes
+	
+	if cant_reportes == 60:
 		print(' No se aceptan mas reportes\n')
 		sleep(1)
 		ptos_suspensivos()
@@ -429,30 +468,42 @@ def reportar_candidato(indice):
 			elim = input(' Ingrese el nombre o ID del usuario: ')
 			try:
 				elim = int(elim)
-				if elim != indice and elim < ultimo_usuario and elim >= 0 and usuarios[elim].estado == 'ACTIVO': 
+				if elim != indice and elim < cant_usuarios and elim >= 0 and usuarios[elim].estado == 'ACTIVO': 
 					print('\n ID:', usuarios[elim].id)
 					mostrar_usuario(usuarios[elim])
 
-					motivos_reportes[espacioDisponible] = input(' Ingrese el motivo del reporte: ')
-					reportes_candidatos[espacioDisponible][0] = int(indice)
-					reportes_candidatos[espacioDisponible][1] = int(elim)
-					reportes_candidatos[espacioDisponible][2] = 0
+					reportes[cant_reportes].id_reportante = int(indice)
+					reportes[cant_reportes].id_reportado = int(elim)
+					reportes[cant_reportes].estado = 0
+					reportes[cant_reportes].motivo = input(' Ingrese el motivo del reporte: ')
+
+					alReportes = open(afReportes, "w+b")
+					pickle.dump(reportes, alReportes)
+					alReportes.close()
+
 					salir = True
+					cant_reportes += 1
 					print('\n Reporte guardado')
 					sleep(1)
 					ptos_suspensivos()
 
 			except ValueError:
-				for i in range(ultimo_usuario):
+				for i in range(cant_usuarios):
 					if elim.capitalize() != usuarios[indice].nombre and elim.capitalize() == usuarios[i].nombre and usuarios[i].estado == 'ACTIVO': 
-						print('\n ID:', usuarios[elim].id)
-						mostrar_usuario(usuarios[elim])
+						print('\n ID:', usuarios[i].id)
+						mostrar_usuario(usuarios[i])
 						
-						motivos_reportes[espacioDisponible] = input('\n Ingrese el motivo del reporte: ')
-						reportes_candidatos[espacioDisponible][0] = int(indice)
-						reportes_candidatos[espacioDisponible][1] = i
-						reportes_candidatos[espacioDisponible][2] = 0
+						reportes[cant_reportes].id_reportante = int(indice)
+						reportes[cant_reportes].id_reportado = i
+						reportes[cant_reportes].estado = 0
+						reportes[cant_reportes].motivo = input(' Ingrese el motivo del reporte: ')
+
+						alReportes = open(afReportes, "w+b")
+						pickle.dump(reportes, alReportes)
+						alReportes.close()
+
 						salir = True
+						cant_reportes += 1
 						print('\n Reporte guardado')
 						sleep(1)
 						ptos_suspensivos()
@@ -462,25 +513,34 @@ def reportar_candidato(indice):
 def reportes_est(indice, test=False):
 	limpiar()
 	cont, match, ida, vuelta = 0, 0, 0, 0
-	for i in range(ultimo_usuario):
-		for e in range(ultimo_usuario): 
+
+	if test:
+		print('      ', end='', flush=True)
+		for n in range(cant_usuarios): print(n, ' ', end='', flush=True)
+		print('\n     ', end='', flush=True)
+		for n in range(cant_usuarios): print(' - ', end='', flush=True)
+		print('')
+
+	for i in range(cant_usuarios):
+		if test: print(f' {i} |', end='', flush=True)
+		for e in range(cant_usuarios): 
 			if test: 
-				if likes[i][e] != -1: print(likes[i][e], ' ', end='', flush=True)
-				else: print('\x1b[1;31m'+'x'+'\033[0;m', ' ', end='', flush=True)
+				if likes[i][e] != -1: print(' ', likes[i][e], end='', flush=True)
+				else: print(' ', '\x1b[1;31m'+'x'+'\033[0;m', end='', flush=True)
 
 			if likes[i][e] != -1 and i == indice: cont += 1
 		if test: print('')
 
-	for i in range(ultimo_usuario):
+	for i in range(cant_usuarios):
 		if i != indice:
 			if likes[indice][i] == 1 and likes[i][indice] == 1: match += 1
 			elif likes[indice][i] == 1: ida += 1
 			elif likes[i][indice] == 1: vuelta += 1
 
 	print(
-		f'\nMatcheados sobre el % posible: {int((match*100)/cont)}%\n'
-		f'Likes dados y no recibidos: {ida}\n'
-		f'Likes recibidos y no respondidos: {vuelta}'
+		f'\n\n* Matcheados sobre el % posible: {int((match*100)/cont)}%\n'
+		f'* Likes dados y no recibidos: {ida}\n'
+		f'* Likes recibidos y no respondidos: {vuelta}'
 	)
 
 ##MODERADOR
@@ -490,14 +550,14 @@ def desactivar_usuario():
 		elim = input(' Ingrese el nombre o ID del usuario: ')
 		try:
 			elim = int(elim)
-			if elim < ultimo_usuario and elim >= 0 and usuarios[elim].estado == 'ACTIVO': 
+			if elim < cant_usuarios and elim >= 0 and usuarios[elim].estado == 'ACTIVO': 
 				print('\n ID:', usuarios[elim].id)
 				mostrar_usuario(usuarios[elim])
 
 				return eliminar_perfil(elim)
 				salir = True
 		except ValueError:
-			for i in range(ultimo_usuario):
+			for i in range(cant_usuarios):
 				if elim.capitalize() == usuarios[i].nombre and usuarios[i].id == 'ACTIVO': 
 					print('\n ID:', usuarios[elim].id)
 					mostrar_usuario(usuarios[elim])
@@ -507,29 +567,32 @@ def desactivar_usuario():
 
 		if not salir: mensaje_error('No se encontro el usuario o ID')
 
+def reportesPendientes():
+	for n in range(60):
+		if reportes[n].estado == 0: return True
+	return False
 def ver_reportes():
-	espacioDisponible = ultimo_reporte()
-	if espacioDisponible == 0 or espacioDisponible == -1:
+	if not reportesPendientes():
 		limpiar()
-		print('\n No hay reportes')
+		print(reportes[cant_reportes-1].id_reportado)
+		print('\n No hay reportes ')
 		input('\n\n Presione cualquier tecla')
 	else:
-		limpiar()
-		for i in range(espacioDisponible):
+		for i in range(cant_reportes):
 			if (
-				usuarios[reportes_candidatos[i][0]].estado == 'ACTIVO' and 
-				usuarios[reportes_candidatos[i][1]].estado == 'ACTIVO' and 
-				reportes_candidatos[i][2] == 0
+				usuarios[reportes[i].id_reportante].estado == 'ACTIVO' and 
+				usuarios[reportes[i].id_reportado].estado == 'ACTIVO' and 
+				reportes[i].estado == 0
 			):
-				idReportante = reportes_candidatos[i][0]
-				idReportado = reportes_candidatos[i][1]
+				idReportante = reportes[i].id_reportante
+				idReportado = reportes[i].id_reportado
 				print(
 					f'-----------------------------------------'
 					f'\n ID reportante: {idReportante}\n'
 					f' Nombre reportante: {usuarios[idReportante].nombre}\n'
 					f'\n ID reportado: {idReportado}\n'
 					f' Nombre reportado: {usuarios[idReportado].nombre}\n'
-					f'\n Motivo: {motivos_reportes[i]}\n'
+					f'\n Motivo: {reportes[i].motivo}\n'
 					f'------------------------------------------'
 					f'\n\n Que desea hacer: '
 					f'\n  1. ignorar reporte'
@@ -542,18 +605,22 @@ def ver_reportes():
 						opcion = int(input(': '))
 
 						if opcion == 1:
-							reportes_candidatos[i][2] = 1
+							reportes[i].motivo = 1
 							print('\nReporte ignorado\n')
 							sleep(2)
 							salir = True
 						elif opcion == 2:
-							if eliminar_perfil(idReportado): reportes_candidatos[i][2] = 2
+							if eliminar_perfil(idReportado): reportes[i].motivo = 2
 							print('\n')
 							salir = True
 						else: mensaje_error('La opcion no existe')
 
 					except ValueError:
 						mensaje_error('Ingrese una numero entero')
+						
+		alReportes = open(afReportes, "w+b")
+		pickle.dump(reportes, alReportes)
+		alReportes.close()
 
 		print(' No quedan mas reportes')
 		sleep(2)
@@ -651,7 +718,7 @@ def edades_bonus():
 	
 def matcheos_comb_bonus():
 	cont = 0
-	for i in range(ultimo_usuario):
+	for i in range(cant_usuarios):
 		if usuarios[i].estado == 'ACTIVO': cont += 1
 	
 	limpiar()
@@ -689,6 +756,7 @@ def pagina_usuario(indice):
 def pagina_moderador():
 	while True:
 		opcion = ingresar_menu(menu_mod, [0, 1, 2])
+
 		if opcion == 0:
 			ptos_suspensivos(' Cerrando sesion')
 			break
@@ -702,15 +770,14 @@ def pagina_moderador():
 
 limpiar()
 print(menu_inicio)
+inicializacion()
+
 opcion = None
 while opcion != 0:
 	try:
 		opcion = int(input(' Ingrese una opción: '))
 		if opcion > 5 or opcion < 0: mensaje_error('La opción no es válida')
 		elif opcion == 1: 
-			limpiar()
-			print(menu_inicio_login)
-
 			opc_modo = 0
 			while opc_modo != 1 and opc_modo != 2:
 				indice = login()
@@ -720,7 +787,7 @@ while opcion != 0:
 					if indice != -1: pagina_moderador()
 				else: mensaje_error('Ingrese una opcion valida')
 		elif opcion == 2:
-			if ultimo_usuario == 20: mensaje_error('No hay espacio en la base de datos')
+			if cant_usuarios == 20: mensaje_error('No hay espacio en la base de datos')
 			else: pagina_usuario(signup())
 		elif opcion == 3:
 			ruleta_bonus()
