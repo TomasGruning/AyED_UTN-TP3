@@ -2,10 +2,14 @@
 import random
 import pickle
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pwinput import pwinput
 from random import randint
 from time import sleep
+
+## En caso de querer mantener una sesion activa
+## cambiar este valor
+vto_horas = 72
 
 #CONSTANTES 
 menu = '''
@@ -122,6 +126,12 @@ class Reporte:
 		self.motivo = ''
 		self.estado = None
 
+class Cookie:
+	def __init__(self):
+		self.time = None
+		self.tipo = 0
+		self.id = None
+
 # Inicializacion de la carpeta y las rutas de los archivos
 if not os.path.exists('.data'):
 	os.makedirs('.data')
@@ -130,18 +140,22 @@ afModeradores = './.data/moderadores.dat'
 afAdmins = './.data/administradores.dat'
 afLikes = './.data/likes.dat'
 afReportes = './.data/reportes.dat'
+afCookie = './.data/cookie.dat'
 
 usuarios = [Usuario() for n in range(20)]
 moderadores = [Moderador() for n in range(10)]
 administradores = [Administrador() for n in range(10)]
 likes = [[0]*20 for n in range(20)]
 reportes = [Reporte() for n in range(60)]
+cookie = Cookie()
 cant_usuarios, cant_moderadores, cant_reportes = 0, 0, 0
 
+#FUNCIONES
 def inicializacion(test=False):
-	global usuarios, moderadores, administradores, likes, reportes 
+	global usuarios, moderadores, administradores, likes, reportes, cookie 
 	global cant_usuarios, cant_moderadores, cant_reportes
 	
+	# Carga de usuarios
 	if os.path.exists(afUsuarios):
 		alUsuarios = open(afUsuarios, "r+b")
 		usuarios = pickle.load(alUsuarios)
@@ -183,6 +197,7 @@ def inicializacion(test=False):
 	for i in usuarios: 
 		if i.id != None: cant_usuarios += 1
 
+	# Carga de moderadores
 	if os.path.exists(afModeradores):
 		alModeradores = open(afModeradores, "r+b")
 		moderadores = pickle.load(alModeradores)
@@ -207,6 +222,7 @@ def inicializacion(test=False):
 	for i in moderadores: 
 		if i.id != None: cant_moderadores += 1
 
+	# Carga de administradores
 	if os.path.exists(afAdmins):
 		alAdmins = open(afAdmins, "r+b")
 		administradores = pickle.load(alAdmins)
@@ -221,6 +237,7 @@ def inicializacion(test=False):
 		pickle.dump(administradores, alAdmins)
 	alAdmins.close()
 	
+	# Carga de matriz de likes
 	if os.path.exists(afLikes):
 		alLikes = open(afLikes, "r+b")
 		likes = pickle.load(alLikes)
@@ -239,6 +256,7 @@ def inicializacion(test=False):
 		pickle.dump(likes, alLikes)
 	alLikes.close()
 
+	# Carga de reportes
 	if os.path.exists(afReportes):
 		alReportes = open(afReportes, "r+b")
 		reportes = pickle.load(alReportes)
@@ -256,7 +274,16 @@ def inicializacion(test=False):
 			reportes[n].estado = randint(0, 2)
 			cant_reportes += 1
 
-#FUNCIONES
+	# Carga de ultima sesion
+	if os.path.exists(afCookie):
+		alCookie = open(afCookie, "r+b")
+		cookie = pickle.load(alCookie)
+
+		if datetime.now() >= cookie.time:
+			os.remove(afCookie)
+		
+		alCookie.close()
+
 ##ESTETICA
 def limpiar():
 	os.system('cls' if os.name == 'nt' else 'clear')
@@ -902,20 +929,29 @@ def matcheos_comb_bonus():
 # M A I N
 # opcion, opc_modo:  Integer
 # sub_opcion:        Char
+def cerrar_sesion():
+	global cookie
+	cookie = Cookie()
+
+	if os.path.exists(afCookie):
+		os.remove(afCookie)
+	
+	ptos_suspensivos('\n Cerrando sesion')
 
 def pagina_usuario(indice):
-	while indice != -1:
+	salir = False
+	while not salir:
 		opcion = ingresar_menu(menu, construccion=[3])
 
 		match opcion:
 			case 0:
-				ptos_suspensivos('\n Cerrando sesion')
-				return 0
+				cerrar_sesion()
+				salir = True
 			case 1:
 				sub_opcion = ingresar_submenu(menu1)
 				if sub_opcion == 'a': editar_datos(indice)
 				elif sub_opcion == 'b': 
-					if eliminar_perfil(indice): return 0
+					if eliminar_perfil(indice): salir = True
 			case 2:
 				sub_opcion = ingresar_submenu(menu2)
 				if sub_opcion == 'a': ver_candidatos(indice)
@@ -925,12 +961,13 @@ def pagina_usuario(indice):
 				input('\n\n Presione cualquier tecla')
 
 def pagina_moderador(indice):
-	while True:
+	salir = False
+	while not salir:
 		opcion = ingresar_menu(menu_mod, [0, 1, 2])
 
 		if opcion == 0:
-			ptos_suspensivos(' Cerrando sesion')
-			break
+			cerrar_sesion()
+			salir = True
 		elif opcion == 1:
 			sub_opcion = ingresar_submenu(menu_mod1, ['a', 'b'])
 			if sub_opcion == 'a': desactivar_usuario() 	
@@ -939,12 +976,13 @@ def pagina_moderador(indice):
 			if sub_opcion == 'a': ver_reportes(indice)
 
 def pagina_admin():
-	while True:
+	salir = False
+	while not salir:
 		opcion = ingresar_menu(menu_mod, [0, 1, 3], [2])
 
 		if opcion == 0:
-			ptos_suspensivos(' Cerrando sesion')
-			break
+			cerrar_sesion()
+			salir = True
 		elif opcion == 1:
 			sub_opcion = ingresar_submenu(menu_admin1, ['b', 'c', 'd'], ['a'])
 			if sub_opcion == 'b': alta_moderador()
@@ -953,39 +991,62 @@ def pagina_admin():
 			reportes_est_admin(True)
 			input('\n\n Presione cualquier tecla')
 
-limpiar()
-print(menu_inicio)
-inicializacion(True)
+def crear_cookie(id, tipo):
+	global cookie
+	cookie.id = id
+	cookie.tipo = tipo
+	cookie.time = datetime.now() + timedelta(hours=vto_horas)
 
 opcion = None
 while opcion != 0:
-	try:
-		opcion = int(input(' Ingrese una opción: '))
-		if opcion > 5 or opcion < 0: mensaje_error('La opción no es válida')
-		elif opcion == 1: 
-			opc_modo = 0
-			indice = login()
-			if opc_modo == 1:
-				pagina_usuario(indice)
-			elif opc_modo == 2: 
-				if indice != -1: pagina_moderador(indice)
-			elif opc_modo == 3: 
-				if indice != -1: pagina_admin()
-			else: mensaje_error('Ingrese una opcion valida')
-		elif opcion == 2:
-			if cant_usuarios == 20: mensaje_error('No hay espacio en la base de datos')
-			else: pagina_usuario(signup())
-		elif opcion == 3:
-			ruleta_bonus()
-		elif opcion == 4:
-			edades_bonus()
-		elif opcion == 5:
-			matcheos_comb_bonus()
+	limpiar()
+	print(menu_inicio)
+	inicializacion(True)
 
-		if opcion > 0 and opcion < 6:
-			limpiar()
-			print(menu_inicio)
-	
-	except ValueError:
-		mensaje_error('Ingrese un numero entero')
+	if cookie.id != None:
+		indice = cookie.id
+		opc_modo = cookie.tipo
+
+		if opc_modo == 1:
+			pagina_usuario(indice)
+		elif opc_modo == 2:  
+			pagina_moderador(indice)
+		elif opc_modo == 3:  
+			pagina_admin()
+	else:
+		try:
+			opcion = int(input(' Ingrese una opción: '))
+			if opcion > 5 or opcion < 0: mensaje_error('La opción no es válida')
+			elif opcion == 1: 
+				opc_modo = 0
+				indice = login()
+				if indice != -1:
+					crear_cookie(indice, opc_modo)
+					alCookie = open(afCookie, "w+b")
+					pickle.dump(cookie, alCookie)
+					alCookie.close()
+
+					if opc_modo == 1:
+						pagina_usuario(indice)
+					elif opc_modo == 2:  
+						pagina_moderador(indice)
+					elif opc_modo == 3:  
+						pagina_admin()
+					else: mensaje_error('Ingrese una opcion valida')
+			elif opcion == 2:
+				if cant_usuarios == 20: mensaje_error('No hay espacio en la base de datos')
+				else: pagina_usuario(signup())
+			elif opcion == 3:
+				ruleta_bonus()
+			elif opcion == 4:
+				edades_bonus()
+			elif opcion == 5:
+				matcheos_comb_bonus()
+
+			if opcion > 0 and opcion < 6:
+				limpiar()
+				print(menu_inicio)
+		
+		except ValueError:
+			mensaje_error('Ingrese un numero entero')
 print('')
