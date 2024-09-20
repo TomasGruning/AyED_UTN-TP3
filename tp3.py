@@ -1,11 +1,11 @@
 # TP3 - Tomás Gruning, Lucía Godoy, Joaquin Raffaelli
 import random
 import pickle
+import os
 from datetime import datetime
 from pwinput import pwinput
 from random import randint
 from time import sleep
-from os import system, name, path
 
 #CONSTANTES 
 menu = '''
@@ -61,6 +61,17 @@ menu_mod2 = '''
  ------------------------
 '''
 
+menu_admin1 = '''
+ --------------------------------------
+ | Gestionar usuarios                 |
+ |                                    |
+ | a. Desactivar usuario o moderador  |
+ | b. Dar de alta moderador           |
+ | c. Desactivar usuario              |
+ | d. Volver                          |
+ --------------------------------------
+'''
+
 menu_inicio = '''
  ---------------
  | Bienvenido  |
@@ -75,10 +86,6 @@ menu_inicio = '''
 
    0. Salir
 	 
-'''
-menu_inicio_login = '''
-  1. Usuario
-  2. Moderador
 '''
 
 #DATOS
@@ -100,6 +107,12 @@ class Moderador:
 		self.email = None
 		self.contraseña = None
 
+class Administrador:
+	def __init__(self):
+		self.id = None
+		self.email = None
+		self.contraseña = None 
+
 class Reporte:
 	def __init__(self):
 		self.id_reportante = None
@@ -107,23 +120,28 @@ class Reporte:
 		self.motivo = ''
 		self.estado = None
 
-afUsuarios = './usuarios.dat'
-afModeradores = './moderadores.dat'
-afLikes = './likes.dat'
-afReportes = './reportes.dat'
+# Inicializacion de la carpeta  las rutas de los archivos
+if not os.path.exists('.data'):
+	os.makedirs('.data')
+afUsuarios = './.data/usuarios.dat'
+afModeradores = './.data/moderadores.dat'
+afAdmins = './.data/administradores.dat'
+afLikes = './.data/likes.dat'
+afReportes = './.data/reportes.dat'
 
 usuarios = [Usuario() for n in range(20)]
 moderadores = [Moderador() for n in range(10)]
+administradores = [Administrador() for n in range(10)]
 likes = [[0]*20 for n in range(20)]
+reportes = [Reporte() for n in range(60)]
 cant_usuarios, cant_reportes = 0, 0
 
-reportes = [Reporte() for n in range(60)]
 
 def inicializacion():
-	global afUsuarios, afModeradores, afLikes
-	global usuarios, reportes, moderadores, likes, cant_usuarios, cant_reportes
+	global usuarios, moderadores, administradores, likes, reportes 
+	global cant_usuarios, cant_reportes
 	
-	if path.exists(afUsuarios):
+	if os.path.exists(afUsuarios):
 		alUsuarios = open(afUsuarios, "r+b")
 		usuarios = pickle.load(alUsuarios)
 	else:
@@ -164,7 +182,7 @@ def inicializacion():
 	for i in usuarios: 
 		if i.id != None: cant_usuarios += 1
 
-	if path.exists(afModeradores):
+	if os.path.exists(afModeradores):
 		alModeradores = open(afModeradores, "r+b")
 		moderadores = pickle.load(alModeradores)
 	else:
@@ -184,8 +202,22 @@ def inicializacion():
 		moderadores[2].contraseña = 'mod555666'
 		pickle.dump(moderadores, alModeradores)
 	alModeradores.close()
+
+	if os.path.exists(afAdmins):
+		alAdmins = open(afAdmins, "r+b")
+		administradores = pickle.load(alAdmins)
+	else:
+		alAdmins = open(afAdmins, "w+b")
+		
+		administradores[0].id = 0
+		administradores[0].estado = 'ACTIVO'
+		administradores[0].email = 'administrador1@ayed.com'
+		administradores[0].contraseña = 'admin111222'
+		
+		pickle.dump(administradores, alAdmins)
+	alAdmins.close()
 	
-	if path.exists(afLikes):
+	if os.path.exists(afLikes):
 		alLikes = open(afLikes, "r+b")
 		likes = pickle.load(alLikes)
 	else:
@@ -203,19 +235,18 @@ def inicializacion():
 		pickle.dump(likes, alLikes)
 	alLikes.close()
 
-	if path.exists(afReportes):
+	if os.path.exists(afReportes):
 		alReportes = open(afReportes, "r+b")
 		reportes = pickle.load(alReportes)
 		for i in reportes:
 			if i.estado != None: cant_reportes += 1
-			print(i.id_reportante, i.id_reportado, i.estado, i.motivo, cant_reportes) 
 	
 		alReportes.close()
 
 #FUNCIONES
 ##ESTETICA
 def limpiar():
-	system('cls' if name == 'nt' else 'clear')
+	os.system('cls' if os.name == 'nt' else 'clear')
 def mensaje_error(mensaje: str):
 	print('\x1b[1;31m'+' (*) ' + mensaje + '\033[0;m\n')
 def mensaje_advertencia(mensaje: str):
@@ -238,6 +269,11 @@ def verificar_tipo(email, contraseña):
 		if moderadores[i].email == email and moderadores[i].contraseña == contraseña and moderadores[i].estado == 'ACTIVO':
 			opc_modo = 2
 			return i
+	for i in range(len(administradores)):
+		if administradores[i].email == email and administradores[i].contraseña == contraseña and administradores[i].estado == 'ACTIVO':
+			opc_modo = 3
+			return i
+
 	return -1
 
 def login():
@@ -329,7 +365,7 @@ def signup():
 		return cant_usuarios-1
 	
 ##MENUS
-def ingresar_menu(menu: str, opciones=[0, 1, 2, 4]):
+def ingresar_menu(menu: str, opciones=[0, 1, 2, 3, 4], construccion=[]):
 	limpiar()
 	print(menu)
 	
@@ -337,21 +373,22 @@ def ingresar_menu(menu: str, opciones=[0, 1, 2, 4]):
 		try:
 			opcion = int(input(' Ingrese una opción: '))
 
-			if opcion in opciones: return opcion
-			elif opcion == 3: mensaje_advertencia('En Construcción')
+			if opcion in construccion: mensaje_advertencia('En Construcción')
+			elif opcion in opciones: return opcion
 			else: mensaje_error('La opción no existe')
 
 		except ValueError:
 			mensaje_error('Ingrese una numero entero')
 
-def ingresar_submenu(menu: str, opciones= ['a', 'b', 'c']):
+def ingresar_submenu(menu: str, opciones= ['a', 'b', 'c'], construccion=[]):
 	limpiar()
 	print(menu)
 	
 	while True:
 		opcion = input(' Ingrese una opcion: ')
 
-		if opcion in opciones: return opcion
+		if opcion in construccion: mensaje_advertencia('En Construcción')
+		elif opcion in opciones: return opcion
 		else: mensaje_error('La opcion no existe')
 				
 	return opcion
@@ -734,7 +771,7 @@ def matcheos_comb_bonus():
 
 def pagina_usuario(indice):
 	while indice != -1:
-		opcion = ingresar_menu(menu)
+		opcion = ingresar_menu(menu, construccion=[3])
 
 		match opcion:
 			case 0:
@@ -767,6 +804,16 @@ def pagina_moderador():
 			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
 			if sub_opcion == 'a': ver_reportes()
 
+def pagina_admin():
+	while True:
+		opcion = ingresar_menu(menu_mod, [0, 1], [2, 3])
+
+		if opcion == 0:
+			ptos_suspensivos(' Cerrando sesion')
+			break
+		if opcion == 1:
+			sub_opcion = ingresar_submenu(menu_admin1, ['d'], ['a', 'b', 'c'])
+			#if sub_opcion == 'a': desactivar_usuario()
 
 limpiar()
 print(menu_inicio)
@@ -785,6 +832,8 @@ while opcion != 0:
 					pagina_usuario(indice)
 				elif opc_modo == 2: 
 					if indice != -1: pagina_moderador()
+				elif opc_modo == 3: 
+					if indice != -1: pagina_admin()
 				else: mensaje_error('Ingrese una opcion valida')
 		elif opcion == 2:
 			if cant_usuarios == 20: mensaje_error('No hay espacio en la base de datos')
