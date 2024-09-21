@@ -661,7 +661,7 @@ def ver_reportes(indice, rol):
 	if not reportesPendientes():
 		print(reportes[cant_reportes-1].id_reportado)
 		print('\n No hay reportes ')
-		input('\n\n Presione cualquier tecla')
+		input('\n\n Presione ENTER ')
 	else:
 		for i in range(cant_reportes):
 			if (
@@ -919,7 +919,7 @@ def edades_bonus():
 	
 	if index: print('\n Los huecos son:', huecos[:index])
 	else: print('\n No hay huecos')
-	input('\n\nPresione cualquier tecla ')
+	input('\n\nPresione ENTER  ')
 	
 def matcheos_comb_bonus():
 	cont = 0
@@ -931,7 +931,7 @@ def matcheos_comb_bonus():
 	print('\n Cantidad de usuarios:', cont - 1)
 	print(' Matcheos posibles:', matcheos, '\n')
 
-	input('\n\nPresione cualquier tecla ')
+	input('\n\nPresione ENTER  ')
 
 # M A I N
 # opcion, opc_modo:  Integer
@@ -965,7 +965,7 @@ def pagina_usuario(indice):
 				elif sub_opcion == 'b': reportar_candidato(indice)    
 			case 4:
 				reportes_est(indice, True)
-				input('\n\n Presione cualquier tecla')
+				input('\n\n Presione ENTER ')
 
 def pagina_moderador(indice):
 	salir = False
@@ -999,7 +999,7 @@ def pagina_admin(indice):
 			if sub_opcion == 'a': ver_reportes(indice, 'admin')
 		elif opcion == 3:
 			reportes_est_admin(True)
-			input('\n\n Presione cualquier tecla')
+			input('\n\n Presione ENTER ')
 
 def crear_cookie(id, rol):
 	global cookie
@@ -1023,7 +1023,7 @@ while opcion != 0:
 			pagina_admin(indice)
 	else:
 		limpiar()
-		print(cookie.id, cookie.rol)
+		print(menu_inicio)
 		
 		try:
 			opcion = int(input(' Ingrese una opción: '))
