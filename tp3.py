@@ -7,9 +7,9 @@ from pwinput import pwinput
 from random import randint
 from time import sleep
 
-## En caso de querer mantener una sesion activa
-## cambiar este valor
-vto_horas = 72
+## En caso de no querer mantener una sesion activa
+## cambiar este valor a 0
+vto_horas = 48
 
 #CONSTANTES 
 menu = '''
@@ -89,7 +89,6 @@ menu_inicio = '''
    5. Matcheos combinados
 
    0. Salir
-	 
 '''
 
 #DATOS
@@ -122,14 +121,15 @@ class Reporte:
 	def __init__(self):
 		self.id_reportante = None
 		self.id_reportado = None
-		self.id_moderador = None
+		self.id_responsable = None
+		self.rol = None
 		self.motivo = ''
 		self.estado = None
 
 class Cookie:
 	def __init__(self):
 		self.time = None
-		self.tipo = 0
+		self.rol = 0
 		self.id = None
 
 # Inicializacion de la carpeta y las rutas de los archivos
@@ -260,19 +260,20 @@ def inicializacion(test=False):
 	if os.path.exists(afReportes):
 		alReportes = open(afReportes, "r+b")
 		reportes = pickle.load(alReportes)
-		for i in reportes:
-			if i.estado != None: cant_reportes += 1
-	
-		alReportes.close()
+	else:
+		alReportes = open(afReportes, "w+b")
+		if test:
+			for n in range(40):
+				reportes[n].id_reportante = randint(0, cant_usuarios-1)
+				reportes[n].id_reportado = randint(0, cant_usuarios-1)
+				reportes[n].id_responsable = randint(0, cant_moderadores-1)
+				reportes[n].motivo = ''
+				reportes[n].estado = randint(0, 2)
+			pickle.dump(reportes, alReportes)
+	alReportes.close()
 
-	if test:
-		for n in range(40):
-			reportes[n].id_reportante = randint(0, cant_usuarios-1)
-			reportes[n].id_reportado = randint(0, cant_usuarios-1)
-			reportes[n].id_moderador = randint(0, cant_moderadores-1)
-			reportes[n].motivo = ''
-			reportes[n].estado = randint(0, 2)
-			cant_reportes += 1
+	for i in reportes:
+		if i.estado != None: cant_reportes += 1
 
 	# Carga de ultima sesion
 	if os.path.exists(afCookie):
@@ -655,9 +656,9 @@ def reportesPendientes():
 	for n in range(60):
 		if reportes[n].estado == 0: return True
 	return False
-def ver_reportes(indice):
+def ver_reportes(indice, rol):
+	limpiar()
 	if not reportesPendientes():
-		limpiar()
 		print(reportes[cant_reportes-1].id_reportado)
 		print('\n No hay reportes ')
 		input('\n\n Presione cualquier tecla')
@@ -690,15 +691,17 @@ def ver_reportes(indice):
 
 						if opcion == 1:
 							reportes[i].motivo = 1
-							reportes[i].id_moderador = indice
+							reportes[i].id_responsable = indice
+							reportes[i].rol = rol
 
 							print('\nReporte ignorado\n')
-							sleep(2)
+							sleep(1)
 							salir = True
 						elif opcion == 2:
 							if eliminar_perfil(idReportado): 
 								reportes[i].motivo = 2
-								reportes[i].id_moderador = indice
+								reportes[i].id_responsable = indice
+								reportes[i].rol = rol
 
 							print('\n')
 							salir = True
@@ -792,20 +795,24 @@ def mayor_contador(arr):
 	return indice
 # Sin testear
 def reportes_est_admin(test=False):
-	reportes_ignorados, reportes_aceptados = 0, 0
+	reportes_ignorados, reportes_aceptados, cant_reportes_mods = 0, 0, 0
 	acciones_reportes = [[0]*cant_moderadores for n in range(2)]
 	acciones_total_reportes = [0 for n in range(cant_moderadores)]
+
+	for i in range(cant_reportes):
+		if reportes[i].rol != 'admin': cant_reportes_mods += 1
 
 	limpiar()
 	if cant_reportes > 0:
 		for i in range(cant_reportes):
-			if reportes[i].estado == 1: 
-				reportes_ignorados += 1
-				acciones_reportes[0][reportes[i].id_moderador] += 1
+			if reportes[i].rol != 'admin':
+				if reportes[i].estado == 1: 
+					reportes_ignorados += 1
+					acciones_reportes[0][reportes[i].id_responsable] += 1
 
-			if reportes[i].estado == 2: 
-				reportes_aceptados += 1
-				acciones_reportes[1][reportes[i].id_moderador] += 1
+				if reportes[i].estado == 2: 
+					reportes_aceptados += 1
+					acciones_reportes[1][reportes[i].id_responsable] += 1
 		
 		for i in range(cant_moderadores):
 			acciones_total_reportes[i] = acciones_reportes[0][i] + acciones_reportes[1][i]
@@ -816,8 +823,8 @@ def reportes_est_admin(test=False):
 			print(acciones_total_reportes)
 		print(
 			f'\n* Cantidad de reportes: {cant_reportes}\n'
-			f'* % de reportes ignorados: %{int((reportes_ignorados*100)/cant_reportes)}\n'
-			f'* % de reportes aceptados: %{int((reportes_aceptados*100)/cant_reportes)}\n\n'
+			f'* % de reportes ignorados por moderadores: %{int((reportes_ignorados*100)/cant_reportes_mods)}\n'
+			f'* % de reportes aceptados por moderadores: %{int((reportes_aceptados*100)/cant_reportes_mods)}\n\n'
 			f'* Moderador con mas reportes ignorados: {moderadores[mayor_contador(acciones_reportes[0])].email}\n'
 			f'* Moderador con mas reportes aceptados: {moderadores[mayor_contador(acciones_reportes[1])].email}\n'
 			f'* Moderador con mas reportes procesados: {moderadores[mayor_contador(acciones_total_reportes)].email}'
@@ -973,12 +980,12 @@ def pagina_moderador(indice):
 			if sub_opcion == 'a': desactivar_usuario() 	
 		elif opcion == 2:
 			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
-			if sub_opcion == 'a': ver_reportes(indice)
+			if sub_opcion == 'a': ver_reportes(indice, 'mod')
 
-def pagina_admin():
+def pagina_admin(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0, 1, 3], [2])
+		opcion = ingresar_menu(menu_mod, [0, 1, 2, 3])
 
 		if opcion == 0:
 			cerrar_sesion()
@@ -987,33 +994,37 @@ def pagina_admin():
 			sub_opcion = ingresar_submenu(menu_admin1, ['b', 'c', 'd'], ['a'])
 			if sub_opcion == 'b': alta_moderador()
 			elif sub_opcion == 'c': desactivar_usuario_moderador()
+		elif opcion == 2:
+			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
+			if sub_opcion == 'a': ver_reportes(indice, 'admin')
 		elif opcion == 3:
 			reportes_est_admin(True)
 			input('\n\n Presione cualquier tecla')
 
-def crear_cookie(id, tipo):
+def crear_cookie(id, rol):
 	global cookie
 	cookie.id = id
-	cookie.tipo = tipo
+	cookie.rol = rol
 	cookie.time = datetime.now() + timedelta(hours=vto_horas)
+
+inicializacion(True)
 
 opcion = None
 while opcion != 0:
-	limpiar()
-	print(menu_inicio)
-	inicializacion(True)
-
 	if cookie.id != None:
 		indice = cookie.id
-		opc_modo = cookie.tipo
+		opc_modo = cookie.rol
 
 		if opc_modo == 1:
 			pagina_usuario(indice)
 		elif opc_modo == 2:  
 			pagina_moderador(indice)
 		elif opc_modo == 3:  
-			pagina_admin()
+			pagina_admin(indice)
 	else:
+		limpiar()
+		print(cookie.id, cookie.rol)
+		
 		try:
 			opcion = int(input(' Ingrese una opción: '))
 			if opcion > 5 or opcion < 0: mensaje_error('La opción no es válida')
@@ -1021,17 +1032,18 @@ while opcion != 0:
 				opc_modo = 0
 				indice = login()
 				if indice != -1:
-					crear_cookie(indice, opc_modo)
-					alCookie = open(afCookie, "w+b")
-					pickle.dump(cookie, alCookie)
-					alCookie.close()
+					if opc_modo > 0 and opc_modo < 4:
+						crear_cookie(indice, opc_modo)
+						alCookie = open(afCookie, "w+b")
+						pickle.dump(cookie, alCookie)
+						alCookie.close()
 
-					if opc_modo == 1:
-						pagina_usuario(indice)
-					elif opc_modo == 2:  
-						pagina_moderador(indice)
-					elif opc_modo == 3:  
-						pagina_admin()
+						if opc_modo == 1:
+							pagina_usuario(indice)
+						elif opc_modo == 2:  
+							pagina_moderador(indice)
+						elif opc_modo == 3:  
+							pagina_admin(indice)
 					else: mensaje_error('Ingrese una opcion valida')
 			elif opcion == 2:
 				if cant_usuarios == 20: mensaje_error('No hay espacio en la base de datos')
