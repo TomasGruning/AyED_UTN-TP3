@@ -1,6 +1,7 @@
 # TP3 - Tomás Gruning, Lucía Godoy, Joaquin Raffaelli
 import random
 import pickle
+import io
 import os
 from datetime import datetime, timedelta
 from pwinput import pwinput
@@ -95,36 +96,36 @@ menu_inicio = '''
 ##CLASES
 class Usuario:
 	def __init__(self):
-		self.id = None
-		self.estado = None
-		self.nombre = None
-		self.email = None
-		self.contraseña = None
-		self.fecha_nacimiento = None
-		self.biografia = None
-		self.hobbies = None
+		self.id = -1
+		self.estado = False
+		self.nombre = ' '*32
+		self.email = ' '*32
+		self.contraseña = ' '*32
+		self.fecha_nacimiento = ' '*10
+		self.biografia = ' '*255
+		self.hobbies = ' '*255
 
 class Moderador:
 	def __init__(self):
-		self.id = None
-		self.estado = None
-		self.email = None
-		self.contraseña = None
+		self.id = -1
+		self.estado = False
+		self.email = ' '*32
+		self.contraseña = ' '*32
 
 class Administrador:
 	def __init__(self):
-		self.id = None
-		self.email = None
-		self.contraseña = None 
+		self.id = -1
+		self.email = ' '*32
+		self.contraseña = ' '*32 
 
 class Reporte:
 	def __init__(self):
-		self.id_reportante = None
-		self.id_reportado = None
-		self.id_responsable = None
-		self.rol = None
-		self.motivo = ''
-		self.estado = None
+		self.id_reportante = -1
+		self.id_reportado = -1
+		self.id_responsable = -1
+		self.rol = 0
+		self.motivo = ' '*32
+		self.estado = 0
 
 class Cookie:
 	def __init__(self):
@@ -133,20 +134,16 @@ class Cookie:
 		self.id = None
 
 # Inicializacion de la carpeta y las rutas de los archivos
-if not os.path.exists('.data'):
-	os.makedirs('.data')
-afUsuarios = './.data/usuarios.dat'
-afModeradores = './.data/moderadores.dat'
-afAdmins = './.data/administradores.dat'
-afLikes = './.data/likes.dat'
-afReportes = './.data/reportes.dat'
-afCookie = './.data/cookie.dat'
+if not os.path.exists('data'):
+	os.makedirs('data')
+afUsuarios = './data/usuarios.dat'
+afModeradores = './data/moderadores.dat'
+afAdmins = './data/administradores.dat'
+afLikes = './data/likes.dat'
+afReportes = './data/reportes.dat'
+afCookie = './data/cookie.dat'
 
-usuarios = [Usuario() for n in range(20)]
-moderadores = [Moderador() for n in range(10)]
-administradores = [Administrador() for n in range(10)]
 likes = [[0]*20 for n in range(20)]
-reportes = [Reporte() for n in range(60)]
 cookie = Cookie()
 cant_usuarios, cant_moderadores, cant_reportes = 0, 0, 0
 
@@ -156,85 +153,52 @@ def inicializacion(test=False):
 	global cant_usuarios, cant_moderadores, cant_reportes
 	
 	# Carga de usuarios
-	if os.path.exists(afUsuarios):
-		alUsuarios = open(afUsuarios, "r+b")
-		usuarios = pickle.load(alUsuarios)
-	else:
+	if not os.path.exists(afUsuarios):
 		alUsuarios = open(afUsuarios, "w+b")
 
 		for n in range(5): 
-			usuarios[n].id = n
-			usuarios[n].estado = 'ACTIVO'
-
-		usuarios[0].nombre = 'Tomas'
-		usuarios[0].email = 'estudiante1@ayed.com'
-		usuarios[0].contraseña = '111222'
-		usuarios[0].fecha_nacimiento = '2005-03-07'
-
-		usuarios[1].nombre = 'Lucia'
-		usuarios[1].email = 'estudiante2@ayed.com'
-		usuarios[1].contraseña = '333444'
-		usuarios[1].fecha_nacimiento = '2001-06-23'
-
-		usuarios[2].nombre = 'Agustin'
-		usuarios[2].email = 'estudiante3@ayed.com'
-		usuarios[2].contraseña = '555666'
-		usuarios[2].fecha_nacimiento = '2003-09-19'
-
-		usuarios[3].nombre = 'Martina'
-		usuarios[3].email = 'estudiante4@ayed.com'
-		usuarios[3].contraseña = '777888'
-		usuarios[3].fecha_nacimiento = '2004-12-09'
-
-		usuarios[4].nombre = 'Joaquin'
-		usuarios[4].email = 'estudiante5@ayed.com'
-		usuarios[4].contraseña = '999101010'
-		usuarios[4].fecha_nacimiento = '2005-01-27'
+			usuario = Usuario()
+			usuario.id = n
+			usuario.estado = True
+			usuario.nombre = 'Martin'.ljust(32, ' ')
+			usuario.email = f'estudiante{n+1}@ayed.com'.ljust(32, ' ')
+			usuario.contraseña = f'{n+1}{n+1}{n+1}{(n+1)*2}{(n+1)*2}{(n+1)*2}'.ljust(32, ' ')
+			usuario.fecha_nacimiento = '2005-03-07'
 		
-		pickle.dump(usuarios, alUsuarios)
+			pickle.dump(usuario, alUsuarios)
 	alUsuarios.close()
 
 	for i in usuarios: 
 		if i.id != None: cant_usuarios += 1
 
 	# Carga de moderadores
-	if os.path.exists(afModeradores):
-		alModeradores = open(afModeradores, "r+b")
-		moderadores = pickle.load(alModeradores)
-	else:
+	if not os.path.exists(afModeradores):
 		alModeradores = open(afModeradores, "w+b")
-		
+
 		for n in range(3): 
-			moderadores[n].id = n
-			moderadores[n].estado = 'ACTIVO'
-
-		moderadores[0].email = 'moderador1@ayed.com'
-		moderadores[0].contraseña = 'mod111222'
-
-		moderadores[1].email = 'moderador2@ayed.com'
-		moderadores[1].contraseña = 'mod333444'
-
-		moderadores[2].email = 'moderador3@ayed.com'
-		moderadores[2].contraseña = 'mod555666'
-		pickle.dump(moderadores, alModeradores)
+			moderador = Moderador()
+			moderador.id = n
+			moderador.estado = True
+			moderador.email = f'moderador{n+1}@ayed.com'.ljust(32, ' ')
+			moderador.contraseña = f'mod{n+1}{n+1}{n+1}{(n+1)*2}{(n+1)*2}{(n+1)*2}'.ljust(32, ' ')
+		
+			pickle.dump(moderador, alModeradores)
 	alModeradores.close()
 
 	for i in moderadores: 
 		if i.id != None: cant_moderadores += 1
 
 	# Carga de administradores
-	if os.path.exists(afAdmins):
-		alAdmins = open(afAdmins, "r+b")
-		administradores = pickle.load(alAdmins)
-	else:
+	if not os.path.exists(afAdmins):
 		alAdmins = open(afAdmins, "w+b")
 		
-		administradores[0].id = 0
-		administradores[0].estado = 'ACTIVO'
-		administradores[0].email = 'administrador1@ayed.com'
-		administradores[0].contraseña = 'admin111222'
+		administrador = Administrador()
+		administradores.id = 0
+		administradores.estado = 'ACTIVO'
+		administradores.email = 'administrador1@ayed.com'
+		administradores.contraseña = 'admin111222'
 		
-		pickle.dump(administradores, alAdmins)
+		pickle.dump(administrador, alAdmins)
 	alAdmins.close()
 	
 	# Carga de matriz de likes
@@ -257,11 +221,10 @@ def inicializacion(test=False):
 	alLikes.close()
 
 	# Carga de reportes
-	if os.path.exists(afReportes):
-		alReportes = open(afReportes, "r+b")
-		reportes = pickle.load(alReportes)
-	else:
+	if not os.path.exists(afReportes):
 		alReportes = open(afReportes, "w+b")
+
+		reportes = [Reporte() for n in range(60)]
 		if test:
 			for n in range(40):
 				reportes[n].id_reportante = randint(0, cant_usuarios-1)
@@ -299,21 +262,73 @@ def ptos_suspensivos(mensaje=' Saliendo'):
 		print('.', end='', flush=True)
 	sleep(2)
 
+##ARCHIVOS
+def buscar_usuario(AF, indice):
+	AL = open(AF, "r+b")
+	tam = os.path.getsize(AF)
+
+	if tam != 0:
+		AL.seek(0)
+		while AL.tell() <= tam:
+			pos = AL.tell()
+			reg = pickle.load(AL)
+			
+			if reg.id == indice:
+				AL.close()
+				return pos
+	else:
+		AL.close()
+		return -1
+
+	AL.close()
+	return -1	
+
+def aux_verificar_tipo(AF: str, clase, email, contraseña):
+	AL = open(AF, "r+b")
+	tam = os.path.getsize(AF)
+
+	if tam != 0:
+		AL.seek(0)
+
+		reg = pickle.load(AL)
+		pos = 0
+
+		while AL.tell() <= tam:
+			if isinstance(clase, Administrador):
+				if reg.email == email and reg.contraseña == contraseña:
+					AL.close()
+					return pos
+				elif isinstance(clase, Usuario) and reg.estado and reg.email == email and reg.contraseña == contraseña:
+					AL.close()
+					return pos
+
+			pos = AL.tell()
+			reg = pickle.load(AL)
+	else:
+		AL.close()
+		return -1
+
+	AL.close()
+	return -1
+
 ##INICIO
 def verificar_tipo(email, contraseña):
 	global opc_modo
-	for i in range(cant_usuarios):
-		if usuarios[i].email == email and usuarios[i].contraseña == contraseña and usuarios[i].estado == 'ACTIVO':
-			opc_modo = 1
-			return i
-	for i in range(len(moderadores)):
-		if moderadores[i].email == email and moderadores[i].contraseña == contraseña and moderadores[i].estado == 'ACTIVO':
-			opc_modo = 2
-			return i
-	for i in range(len(administradores)):
-		if administradores[i].email == email and administradores[i].contraseña == contraseña and administradores[i].estado == 'ACTIVO':
-			opc_modo = 3
-			return i
+
+	indice = aux_verificar_tipo(afUsuarios, Usuario(), email, contraseña)
+	if indice != -1:
+		opc_modo = 1
+		return indice
+
+	indice = aux_verificar_tipo(afModeradores, Moderador(), email, contraseña)
+	if indice != -1:
+		opc_modo = 2
+		return indice
+
+	indice = aux_verificar_tipo(afAdmins, Administrador(), email, contraseña)
+	if indice != -1:
+		opc_modo = 3
+		return indice
 
 	return -1
 
@@ -328,7 +343,7 @@ def login():
 		email = input(' Ingrese su email: ')
 		contraseña = pwinput(' Ingrese su contraseña: ')
 
-		indice = verificar_tipo(email, contraseña)
+		indice = verificar_tipo(email.ljust(32, ' '), contraseña.ljust(32, ' '))
 		if indice == -1:
 			mensaje_error('El email y/o contraseña son incorrectos')
 		else:
@@ -340,16 +355,28 @@ def login():
 	ptos_suspensivos()
 	return indice
 
-def email_rep(email):
-	for n in range(cant_usuarios):
-		if usuarios[n].email == email: return True
-	i = 0
-	while moderadores[i].email:
-		if moderadores[i].email == email: return True
-		i += 1
+def email_rep(AF, email):
+	AL = open(AF, "r+b")
+	tam = os.path.getsize(AF)
+
+	if tam != 0:
+		AL.seek(0)
+
+		reg = pickle.load(AL)
+
+		while AL.tell() <= tam:
+			if reg.email == email: 
+				AL.close()
+				return True
+	else: 
+		AL.close()
+		return False
+
+	AL.close()
 	return False
 def signup():
 	global cant_usuarios
+
 	limpiar()
 	print(' Sign up  |')
 	print('-----------\n')
@@ -373,15 +400,20 @@ def signup():
 	biografia = input(' Ingrese una biografia: ')
 	hobbies = input(' Ingrese sus hobbies: ')
 
-	usuarios[cant_usuarios].id = cant_usuarios
-	usuarios[cant_usuarios].estado = 'ACTIVO'
-	usuarios[cant_usuarios].nombre = nombre
-	usuarios[cant_usuarios].email = email
-	usuarios[cant_usuarios].contraseña = contraseña
-	usuarios[cant_usuarios].fecha_nacimiento = fecha_nacimiento
-	usuarios[cant_usuarios].biografia = biografia
-	usuarios[cant_usuarios].hobbies = hobbies
+	usuario = Usuario()
+	usuario.id = cant_usuarios
+	usuario.estado = True
+	usuario.nombre = nombre.ljust(32, ' ')
+	usuario.email = email.ljust(32, ' ')
+	usuario.contraseña = contraseña.ljust(32, ' ')
+	usuario.fecha_nacimiento = fecha_nacimiento.ljust(10, ' ')
+	usuario.biografia = biografia.ljust(255, ' ')
+	usuario.hobbies = hobbies.ljust(255, ' ')
 	cant_usuarios += 1
+
+	alUsuarios = open(afUsuarios, "w+b")
+	pickle.dump(usuario, alUsuarios)
+	alUsuarios.close()
 
 	# Actualiza la matriz de likes
 	for n in range(cant_usuarios):
@@ -395,10 +427,6 @@ def signup():
 	pickle.dump(likes, alLikes)
 	alLikes.close()
 	#
-
-	alUsuarios = open(afUsuarios, "w+b")
-	pickle.dump(usuarios, alUsuarios)
-	alUsuarios.close()
 
 	print('\n Registrado')
 	sleep(1)
@@ -463,8 +491,15 @@ def mostrar_usuario(us: Usuario):
 	)
 
 def editar_datos(indice):
+	alUsuarios = open(afUsuarios, "w+b")
+	pos = buscar_usuario(afUsuarios, indice)
+
+	us = Usuario()
+	alUsuarios.seek(pos, 0)
+	us = pickle.load(alUsuarios)
+
 	limpiar()
-	mostrar_usuario(moderadores[indice])
+	mostrar_usuario(us)
 	
 	fecha_nacimiento = input(' Ingrese su fecha de nacimiento (YYYY-MM-DD): ')
 	while not calcular_edad(fecha_nacimiento): 
@@ -473,13 +508,13 @@ def editar_datos(indice):
 	biografia = input(' Ingrese su biografia: ')
 	hobbies = input(' Ingrese sus hobbies: ')
 
-	usuarios[indice].fecha_nacimiento = fecha_nacimiento
-	usuarios[indice].biografia = biografia
-	usuarios[indice].hobbies = hobbies
+	us.fecha_nacimiento = fecha_nacimiento
+	us.biografia = biografia
+	us.hobbies = hobbies
 
-	alUsuarios = open(afUsuarios, "w+b")
-	pickle.dump(usuarios, alUsuarios)
+	pickle.dump(us, alUsuarios)
 	alUsuarios.close()
+
 
 def eliminar_perfil(indice, lista='us'):
 	print('')
@@ -520,15 +555,25 @@ def eliminar_perfil(indice, lista='us'):
 
 def ver_candidatos(indice):
 	limpiar()
-	for i in range(cant_usuarios):
-		if i != indice and usuarios[i].estado == 'ACTIVO':
-			mostrar_usuario(usuarios[i])
+	tam = os.path.getsize(afUsuarios)
+	usuario_registrado = Usuario()
+	alUsuarios = open(afUsuarios, "r+b")
+	alUsuarios.seek(0)
+
+	while alUsuarios.tell() <= tam:
+		reg = pickle.load(alUsuarios)
+
+		if reg.id == indice:
+			usuario_registrado = reg
+		elif reg.estado == 'ACTIVO':
+			mostrar_usuario(reg)
 
 	while True:
 		me_gusta = input('\n Ingrese el nombre de un estudiante: ').capitalize()
 
-		for i in range(cant_usuarios):
-			if usuarios[i].nombre == me_gusta and usuarios[indice].nombre != me_gusta:
+		alUsuarios.seek(0)
+		while alUsuarios.tell() <= tam:
+			if reg.nombre == me_gusta and usuario_registrado.nombre != me_gusta:
 				likes[indice][i] = 1
 				alLikes = open(afLikes, "w+b")
 				pickle.dump(likes, alLikes)
