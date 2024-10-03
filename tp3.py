@@ -98,25 +98,25 @@ class Usuario:
 	def __init__(self):
 		self.id = -1
 		self.estado = False
-		self.nombre = ' '*32
-		self.email = ' '*32
-		self.contraseña = ' '*32
-		self.fecha_nacimiento = ' '*10
-		self.biografia = ' '*255
-		self.hobbies = ' '*255
+		self.nombre = ' '.ljust(32, ' ')
+		self.email = ' '.ljust(32, ' ')
+		self.contraseña = ' '.ljust(32, ' ')
+		self.fecha_nacimiento = ' '.ljust(10, ' ')
+		self.biografia = ' '.ljust(255, ' ')
+		self.hobbies = ' '.ljust(255, ' ')
 
 class Moderador:
 	def __init__(self):
 		self.id = -1
 		self.estado = False
-		self.email = ' '*32
-		self.contraseña = ' '*32
+		self.email = ' '.ljust(32, ' ')
+		self.contraseña = ' '.ljust(32, ' ')
 
 class Administrador:
 	def __init__(self):
 		self.id = -1
-		self.email = ' '*32
-		self.contraseña = ' '*32 
+		self.email = ' '.ljust(32, ' ')
+		self.contraseña = ' '.ljust(32, ' ') 
 
 class Reporte:
 	def __init__(self):
@@ -124,7 +124,7 @@ class Reporte:
 		self.id_reportado = -1
 		self.id_responsable = -1
 		self.rol = 0
-		self.motivo = ' '*32
+		self.motivo = ' '.ljust(255, ' ')
 		self.estado = 0
 
 class Cookie:
@@ -155,17 +155,19 @@ def inicializacion(test=False):
 	# Carga de usuarios
 	if os.path.exists(afUsuarios):
 		cant_usuarios = contar_registros(afUsuarios)
+		
 	else:
 		alUsuarios = open(afUsuarios, "w+b")
+		nombres = ['Martin', 'Juila', 'Luis', 'Rafael', 'Laura']
 
 		for n in range(5): 
 			usuario = Usuario()
 			usuario.id = n
 			usuario.estado = True
-			usuario.nombre = 'Martin'.ljust(32, ' ')
+			usuario.nombre = nombres[n].ljust(32, ' ')
 			usuario.email = f'estudiante{n+1}@ayed.com'.ljust(32, ' ')
 			usuario.contraseña = f'{n+1}{n+1}{n+1}{(n+1)*2}{(n+1)*2}{(n+1)*2}'.ljust(32, ' ')
-			usuario.fecha_nacimiento = '2005-03-07'
+			usuario.fecha_nacimiento = f'200{n}-03-07'
 		
 			pickle.dump(usuario, alUsuarios)
 			cant_usuarios += 1
@@ -247,19 +249,20 @@ def ptos_suspensivos(mensaje=' Saliendo'):
 
 ##ARCHIVOS
 def contar_registros(AF):
-    contador = 0
-    with open(AF, "r+b") as AL:
-        tam = os.path.getsize(AF)
-        
-        if tam == 0:
-            return 0
-        
-        AL.seek(0)
-        while AL.tell() < tam:
-            pickle.load(AL)
-            contador += 1
-                
-    return contador
+	contador = 0
+	AL = open(AF, "r+b")
+	tam = os.path.getsize(AF)
+	
+	if tam == 0:
+		return 0
+	
+	AL.seek(0)
+	while AL.tell() < tam:
+		reg = pickle.load(AL)
+		contador += 1
+				
+	AL.close()
+	return contador
 def buscar_usuario(AF, indice):
 	AL = open(AF, "r+b")
 	tam = os.path.getsize(AF)
@@ -293,12 +296,10 @@ def aux_verificar_tipo(AF: str, clase, email, contraseña):
 			if isinstance(clase, Administrador):
 				if reg.email == email and reg.contraseña == contraseña:
 					AL.close()
-					return pos
+					return reg.id
 			elif reg.estado and reg.email == email and reg.contraseña == contraseña:
 				AL.close()
-				return pos
-
-			pos = AL.tell()
+				return reg.id
 	else:
 		AL.close()
 		return -1
@@ -395,20 +396,20 @@ def signup():
 	biografia = input(' Ingrese una biografia: ')
 	hobbies = input(' Ingrese sus hobbies: ')
 
-	usuario = Usuario()
-	usuario.id = cant_usuarios
-	usuario.estado = True
-	usuario.nombre = nombre.capitalize().ljust(32, ' ')
-	usuario.email = email.ljust(32, ' ')
-	usuario.contraseña = contraseña.ljust(32, ' ')
-	usuario.fecha_nacimiento = fecha_nacimiento.ljust(10, ' ')
-	usuario.biografia = biografia.ljust(255, ' ')
-	usuario.hobbies = hobbies.ljust(255, ' ')
+	us = Usuario()
+	us.id = cant_usuarios
+	us.estado = True
+	us.nombre = nombre.capitalize().ljust(32, ' ')
+	us.email = email.ljust(32, ' ')
+	us.contraseña = contraseña.ljust(32, ' ')
+	us.fecha_nacimiento = fecha_nacimiento.ljust(10, ' ')
+	us.biografia = biografia.ljust(255, ' ')
+	us.hobbies = hobbies.ljust(255, ' ')
 	cant_usuarios += 1
 
 	alUsuarios = open(afUsuarios, "r+b")
 	alUsuarios.seek(0, 2)
-	pickle.dump(usuario, alUsuarios)
+	pickle.dump(us, alUsuarios)
 	alUsuarios.close()
 
 	# Actualiza la matriz de likes
@@ -483,12 +484,12 @@ def mostrar_usuario(us: Usuario):
 		f' Fecha de nacimiento: {us.fecha_nacimiento}\n'
 		f' Edad: {calcular_edad(us.fecha_nacimiento.strip())} años\n'
 		f' Biografía: {us.biografia.strip()}\n'
-		f' Hobbies: {us.hobbies.strip()}\n\n'
+		f' Hobbies: {us.hobbies.strip()}\n'
 	)
 
 def editar_datos(indice):
-	alUsuarios = open(afUsuarios, "r+b")
 	pos = buscar_usuario(afUsuarios, indice)
+	alUsuarios = open(afUsuarios, "r+b")
 
 	us = Usuario()
 	alUsuarios.seek(pos, 0)
@@ -504,13 +505,14 @@ def editar_datos(indice):
 	biografia = input(' Ingrese su biografia: ')
 	hobbies = input(' Ingrese sus hobbies: ')
 
-	us.fecha_nacimiento = fecha_nacimiento
-	us.biografia = biografia
-	us.hobbies = hobbies
+	us.fecha_nacimiento = fecha_nacimiento.ljust(10, ' ')
+	us.biografia = biografia.ljust(255, ' ')
+	us.hobbies = hobbies.ljust(255, ' ')
 
+	alUsuarios.seek(pos, 0)
 	pickle.dump(us, alUsuarios)
+	alUsuarios.flush()
 	alUsuarios.close()
-
 
 def eliminar_perfil(indice, lista='us'):
 	print('')
@@ -559,7 +561,7 @@ def ver_candidatos(indice):
 	while alUsuarios.tell() < tam:
 		reg = pickle.load(alUsuarios)
 
-		if reg == us_registrado:
+		if reg.id == indice:
 			us_registrado = reg
 		elif reg.estado:
 			mostrar_usuario(reg)
