@@ -158,15 +158,15 @@ def inicializacion(test=False):
 		
 	else:
 		alUsuarios = open(afUsuarios, "w+b")
-		nombres = ['Martin', 'Juila', 'Luis', 'Rafael', 'Laura']
+		nombres = ['Martin', 'Juila', 'Luis', 'Rafael', 'Laura', 'Juan']
 
-		for n in range(5): 
+		for n in range(len(nombres)): 
 			usuario = Usuario()
 			usuario.id = n
 			usuario.nombre = nombres[n].ljust(32, ' ')
 			usuario.email = f'estudiante{n+1}@ayed.com'.ljust(32, ' ')
 			usuario.contraseña = f'{n+1}{n+1}{n+1}{(n+1)*2}{(n+1)*2}{(n+1)*2}'.ljust(32, ' ')
-			usuario.fecha_nacimiento = f'200{n}-03-07'
+			usuario.fecha_nacimiento = f'200{randint(0, 5)}-03-07'
 		
 			pickle.dump(usuario, alUsuarios)
 			cant_usuarios += 1
@@ -688,25 +688,37 @@ def reportes_est(indice, test=False):
 def desactivar_usuario():
 	salir = False
 	while not salir:
+		alUsuarios = open(afUsuarios, "r+b")
+		tam = os.path.getsize(afUsuarios)
+
 		elim = input(' Ingrese el nombre o ID del usuario: ')
 		try:
 			elim = int(elim)
-			if elim < cant_usuarios and elim >= 0 and usuarios[elim].estado == 'ACTIVO': 
-				print('\n ID:', usuarios[elim].id)
-				mostrar_usuario(usuarios[elim])
 
-				eliminar_perfil(elim)
-				salir = True
+			if elim in range(cant_usuarios):
+				pos = buscar_usuario(afUsuarios, elim)
+				alUsuarios.seek(pos, 0)
+				us = pickle.load(alUsuarios)
+
+				if us.estado:
+					print('\n ID:', us.id)
+					mostrar_usuario(us)
+
+					eliminar_perfil(elim)
+					salir = True
 		except ValueError:
-			for i in range(cant_usuarios):
-				if elim.capitalize() == usuarios[i].nombre and usuarios[i].id == 'ACTIVO': 
-					print('\n ID:', usuarios[elim].id)
-					mostrar_usuario(usuarios[elim])
+			while alUsuarios.tell() < tam:
+				us = pickle.load(alUsuarios)
+				
+				if elim.capitalize() == us.nombre and us.id: 
+					print('\n ID:', us.id)
+					mostrar_usuario(us)
 
-					eliminar_perfil(i)
+					eliminar_perfil(us.id)
 					salir = True
 
 		if not salir: mensaje_error('No se encontro el usuario o ID')
+		alUsuarios.close()
 
 def reportesPendientes():
 	alReportes = open(afReportes, "r+b")
@@ -1037,7 +1049,7 @@ def pagina_usuario(indice):
 def pagina_moderador(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0, 2], [1, 3])
+		opcion = ingresar_menu(menu_mod, [0, 1, 2], [3])
 
 		if opcion == 0:
 			cerrar_sesion()
@@ -1046,7 +1058,7 @@ def pagina_moderador(indice):
 			sub_opcion = ingresar_submenu(menu_mod1, ['a', 'b'])
 			if sub_opcion == 'a': desactivar_usuario() 	
 		elif opcion == 2:
-			sub_opcion = ingresar_submenu(menu_mod2)
+			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
 			if sub_opcion == 'a': ver_reportes(indice, 1)
 
 def pagina_admin(indice):
@@ -1058,7 +1070,7 @@ def pagina_admin(indice):
 			cerrar_sesion()
 			salir = True
 		elif opcion == 1:
-			sub_opcion = ingresar_submenu(menu_admin1, ['b', 'c', 'd'], ['a'])
+			sub_opcion = ingresar_submenu(menu_admin1, ['d'], ['a', 'b', 'c'])
 			if sub_opcion == 'b': alta_moderador()
 			elif sub_opcion == 'c': desactivar_usuario_moderador()
 		elif opcion == 2:
