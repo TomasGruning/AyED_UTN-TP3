@@ -97,7 +97,7 @@ menu_inicio = '''
 class Usuario:
 	def __init__(self):
 		self.id = -1
-		self.estado = False
+		self.estado = True
 		self.nombre = ' '.ljust(32, ' ')
 		self.email = ' '.ljust(32, ' ')
 		self.contraseña = ' '.ljust(32, ' ')
@@ -123,9 +123,9 @@ class Reporte:
 		self.id_reportante = -1
 		self.id_reportado = -1
 		self.id_responsable = -1
-		self.rol = 0
 		self.motivo = ' '.ljust(255, ' ')
 		self.estado = 0
+		self.rol = 0
 
 class Cookie:
 	def __init__(self):
@@ -163,7 +163,6 @@ def inicializacion(test=False):
 		for n in range(5): 
 			usuario = Usuario()
 			usuario.id = n
-			usuario.estado = True
 			usuario.nombre = nombres[n].ljust(32, ' ')
 			usuario.email = f'estudiante{n+1}@ayed.com'.ljust(32, ' ')
 			usuario.contraseña = f'{n+1}{n+1}{n+1}{(n+1)*2}{(n+1)*2}{(n+1)*2}'.ljust(32, ' ')
@@ -208,19 +207,19 @@ def inicializacion(test=False):
 	# Carga de reportes
 	if os.path.exists(afReportes):
 		cant_reportes = contar_registros(afReportes)
-	elif test:
+	else:
 		alReportes = open(afReportes, "w+b")
-
-		for n in range(40):
-			reporte = Reporte()
-			reporte.id_reportante = randint(0, cant_usuarios-1)
-			reporte.id_reportado = randint(0, cant_usuarios-1)
-			reporte.id_responsable = randint(0, cant_moderadores-1)
-			reporte.motivo = ''
-			reporte.estado = randint(0, 2)
-			
-			pickle.dump(reporte, alReportes)
-			cant_reportes += 1
+		if test:
+			for n in range(3):
+				reporte = Reporte()
+				reporte.id_reportante = randint(0, cant_usuarios-1)
+				reporte.id_reportado = 0#randint(0, cant_usuarios-1)
+				reporte.motivo = ' '.ljust(255, ' ')
+				#reporte.id_responsable = randint(0, cant_moderadores-1)
+				#reporte.estado = randint(0, 2)
+				
+				pickle.dump(reporte, alReportes)
+				cant_reportes += 1
 		alReportes.close()
 
 	# Carga de ultima sesion
@@ -516,63 +515,67 @@ def editar_datos(indice):
 
 def eliminar_perfil(indice, lista='us'):
 	print('')
-	cont = 0
-	for i in range(cant_usuarios):
-		if usuarios[i].estado == 'ACTIVO': cont += 1
+	if lista == 'us': AF = afUsuarios
+	else: AF = afModeradores
 
-	if (cant_usuarios > 4 and lista == 'us') or (cant_moderadores > 2 and lista == 'mod'):
+	AL = open(AF, "r+b")
+	activos = 0
+	while AL.tell() < os.path.getsize(AF):
+		reg = pickle.load(AL)
+		if reg.estado: activos += 1
+
+	if (activos > 4 and lista == 'us') or (activos > 2 and lista == 'mod'):
 		confirmar = None
 		while confirmar != 'S' and confirmar != 'N':
 			confirmar = input(' Esta seguro? [S/N]: ').upper()
 			if confirmar == 'S':
+				pos = buscar_usuario(AF, indice)
+				AL.seek(pos, 0)
+				reg = pickle.load(AL)
+				reg.estado = False
+
+				AL.seek(pos, 0)
+				pickle.dump(reg, AL)
+				AL.flush()
+				AL.close()
+
 				ptos_suspensivos(' Eliminando usuario')
-				if lista == 'mod': 
-					moderadores[indice].estado = 'INACTIVO'
-
-					alModeradores = open(afUsuarios, "w+b")
-					pickle.dump(moderadores, alModeradores)
-					alModeradores.close()
-				else: 
-					usuarios[indice].estado = 'INACTIVO'
-
-					alUsuarios = open(afUsuarios, "w+b")
-					pickle.dump(usuarios, alUsuarios)
-					alUsuarios.close()
-
 				print(' Listo') 
 				sleep(4)
 				return True
 			elif confirmar == 'N':
+				AL.close()
 				ptos_suspensivos(' Cancelando')
 				return False
 			else: mensaje_error('La opcion no es valida')
 	else:
+		AL.close()
 		mensaje_error('No se pueden eliminar mas usuarios')
 		sleep(1.5)
 		ptos_suspensivos()
 
 def ver_candidatos(indice):
 	limpiar()
-	tam = os.path.getsize(afUsuarios)
 	us_registrado = Usuario()
 	alUsuarios = open(afUsuarios, "r+b")
 	alUsuarios.seek(0)
 
-	while alUsuarios.tell() < tam:
+	while alUsuarios.tell() < os.path.getsize(afUsuarios):
 		reg = pickle.load(alUsuarios)
 
 		if reg.id == indice:
 			us_registrado = reg
 		elif reg.estado:
 			mostrar_usuario(reg)
+			print(reg.estado)
 
 	while True:
 		me_gusta = input('\n Ingrese el nombre de un estudiante: ').capitalize()
 
-		alUsuarios.seek(0, 0)
-		while alUsuarios.tell() < tam:
+		alUsuarios.seek(0)
+		while alUsuarios.tell() < os.path.getsize(afUsuarios):
 			reg = pickle.load(alUsuarios)
-			if reg.nombre.strip() == me_gusta and us_registrado.nombre.strip() != me_gusta:
+			if reg.nombre.strip() == me_gusta and reg.estado and us_registrado.nombre.strip() != me_gusta:
 				likes[indice][reg.id] = 1
 				alLikes = open(afLikes, "w+b")
 				pickle.dump(likes, alLikes)
@@ -584,7 +587,7 @@ def ver_candidatos(indice):
 				return 0
 		mensaje_error('El nombre no coincide con ningun usuario')
 
-def reportar_candidato(us_registado):
+def reportar_candidato(indice):
 	global cant_reportes
 	
 	if cant_reportes == 60:
@@ -592,51 +595,58 @@ def reportar_candidato(us_registado):
 		sleep(1)
 		ptos_suspensivos()
 	else:
+		alUsuarios = open(afUsuarios, "r+b")
+
 		salir = False
 		while not salir:
 			elim = input(' Ingrese el nombre o ID del usuario: ')
 			try:
 				elim = int(elim)
-				if elim != us_registado.id and elim < cant_usuarios and elim >= 0 and us_registado.estado: 
-					print('\n ID:', us_registado.id)
-					mostrar_usuario(us_registado)
+				if elim in range(cant_usuarios):
+					pos = buscar_usuario(afUsuarios, elim)
+					alUsuarios.seek(pos, 0)
+					reg = pickle.load(alUsuarios)
 
-					reporte = Reporte()
-					reporte.id_reportante = int(indice)
-					reporte.id_reportado = int(elim)
-					reporte.estado = 0
-					reporte.motivo = input(' Ingrese el motivo del reporte: ')
+					if elim != indice and elim >= 0 and reg.estado: 
+						print('\n ID:', reg.id)
+						mostrar_usuario(reg)
 
-					salir = True
+						reporte = Reporte()
+						reporte.id_reportante = indice
+						reporte.id_reportado = elim
+						reporte.motivo = input(' Ingrese el motivo del reporte: ').ljust(255, ' ')
+
+						salir = True
 
 			except ValueError:
-				tam = os.path.getsize(afUsuarios)
-				alUsuarios = open(afUsuarios, "r+b")
-				alUsuarios.seek(0)
+				pos = buscar_usuario(afUsuarios, indice)
+				alUsuarios.seek(pos, 0)
+				us_registrado = pickle.load(alUsuarios)
 
-				while alUsuarios.tell() < tam:
-					if elim.capitalize() != usuarios[indice].nombre and elim.capitalize() == usuarios[i].nombre and usuarios[i].estado: 
-						print('\n ID:', usuarios[i].id)
-						mostrar_usuario(usuarios[i])
+				alUsuarios.seek(0)
+				while alUsuarios.tell() < os.path.getsize(afUsuarios):
+					reg = pickle.load(alUsuarios)
+					if elim.capitalize() != us_registrado.nombre.strip() and elim.capitalize() == reg.nombre.strip() and reg.estado: 
+						print('\n ID:', reg.id)
+						mostrar_usuario(reg)
 						
 						reporte = Reporte()
-						reporte.id_reportante = int(indice)
+						reporte.id_reportante = indice
 						reporte.id_reportado = i
-						reporte.estado = 0
-						reporte.motivo = input(' Ingrese el motivo del reporte: ')
+						reporte.motivo = input(' Ingrese el motivo del reporte: ').ljust(255, ' ')
 						
 						salir = True
 
 			if not salir: mensaje_error('No se encontro el usuario o ID')
 			else:
-				pos = buscar_usuario(afReportes, us_registado.id)
-
-				alReportes = open(afReportes, "w+b")
-				alReportes.seek(0, 2)
-				pickle.dump(reportes, alReportes)
-				alReportes.close()
-
+				alReportes = open(afReportes, "r+b")
+				alReportes.seek(2)
+				pickle.dump(reporte, alReportes)
 				cant_reportes += 1
+
+				alReportes.close()
+				alUsuarios.close()
+
 				print('\n Reporte guardado')
 				sleep(1)
 				ptos_suspensivos()
@@ -699,31 +709,46 @@ def desactivar_usuario():
 		if not salir: mensaje_error('No se encontro el usuario o ID')
 
 def reportesPendientes():
-	for n in range(60):
-		if reportes[n].estado == 0: return True
+	alReportes = open(afReportes, "r+b")
+
+	while alReportes.tell() < os.path.getsize(afReportes):
+		reg = pickle.load(alReportes)
+		if reg.estado == 0: return True
 	return False
 def ver_reportes(indice, rol):
 	limpiar()
 	if not reportesPendientes():
-		print(reportes[cant_reportes-1].id_reportado)
-		print('\n No hay reportes ')
-		input('\n\n Presione ENTER ')
+		print('\n No hay reportes \n')
+		ptos_suspensivos()
 	else:
-		for i in range(cant_reportes):
+		alReportes = open(afReportes, "r+b")
+		alReportes.seek(0)
+		
+		while alReportes.tell() < os.path.getsize(afReportes):
+			reg = pickle.load(alReportes)
+
+			alUsuarios = open(afUsuarios, "r+b")
+			pos = buscar_usuario(afUsuarios, reg.id_reportante)
+			alUsuarios.seek(pos, 0)
+			us_reportante = pickle.load(alUsuarios)
+
+			pos = buscar_usuario(afUsuarios, reg.id_reportado)
+			alUsuarios.seek(pos, 0)
+			us_reportado = pickle.load(alUsuarios)
+			alUsuarios.close()
+
 			if (
-				usuarios[reportes[i].id_reportante].estado == 'ACTIVO' and 
-				usuarios[reportes[i].id_reportado].estado == 'ACTIVO' and 
-				reportes[i].estado == 0
+				us_reportante.estado and 
+				us_reportado.estado and 
+				reg.estado == 0
 			):
-				idReportante = reportes[i].id_reportante
-				idReportado = reportes[i].id_reportado
 				print(
 					f'-----------------------------------------'
-					f'\n ID reportante: {idReportante}\n'
-					f' Nombre reportante: {usuarios[idReportante].nombre}\n'
-					f'\n ID reportado: {idReportado}\n'
-					f' Nombre reportado: {usuarios[idReportado].nombre}\n'
-					f'\n Motivo: {reportes[i].motivo}\n'
+					f'\n ID reportante: {reg.id_reportante}\n'
+					f' Nombre reportante: {us_reportante.nombre.strip()}\n'
+					f'\n ID reportado: {reg.id_reportado}\n'
+					f' Nombre reportado: {us_reportado.nombre.strip()}\n'
+					f'\n Motivo: {reg.motivo.strip()}\n'
 					f'------------------------------------------'
 					f'\n\n Que desea hacer: '
 					f'\n  1. ignorar reporte'
@@ -732,35 +757,29 @@ def ver_reportes(indice, rol):
 				
 				salir = False
 				while not salir:
-					try:	
+					try:
 						opcion = int(input(': '))
 
-						if opcion == 1:
-							reportes[i].motivo = 1
-							reportes[i].id_responsable = indice
-							reportes[i].rol = rol
+						if opcion != 1 and opcion != 2: mensaje_error('La opcion no existe')
+						else:
+							if opcion == 1:
+								reg.estado = 1
+								print('\nReporte ignorado\n')
+								sleep(1)
+							elif opcion == 2:
+								if eliminar_perfil(us_reportado.id): reg.estado = 2
+								else: reg.estado = 1
 
-							print('\nReporte ignorado\n')
-							sleep(1)
-							salir = True
-						elif opcion == 2:
-							if eliminar_perfil(idReportado): 
-								reportes[i].motivo = 2
-								reportes[i].id_responsable = indice
-								reportes[i].rol = rol
-
+							reg.rol = rol
+							pickle.dump(reg, alReportes)
 							print('\n')
 							salir = True
-						else: mensaje_error('La opcion no existe')
 
 					except ValueError:
 						mensaje_error('Ingrese una numero entero')
-						
-		alReportes = open(afReportes, "w+b")
-		pickle.dump(reportes, alReportes)
-		alReportes.close()
 
 		print(' No quedan mas reportes')
+		alReportes.close()
 		sleep(2)
 		ptos_suspensivos()
 
@@ -1001,12 +1020,14 @@ def pagina_usuario(indice):
 				cerrar_sesion()
 				salir = True
 			case 1:
-				sub_opcion = ingresar_submenu(menu1, construccion=['b'])
+				sub_opcion = ingresar_submenu(menu1)
 				if sub_opcion == 'a': editar_datos(indice)
 				elif sub_opcion == 'b': 
-					if eliminar_perfil(indice): salir = True
+					if eliminar_perfil(indice): 
+						cerrar_sesion()
+						salir = True
 			case 2:
-				sub_opcion = ingresar_submenu(menu2, construccion=['b'])
+				sub_opcion = ingresar_submenu(menu2)
 				if sub_opcion == 'a': ver_candidatos(indice)
 				elif sub_opcion == 'b': reportar_candidato(indice)    
 			case 4:
@@ -1016,7 +1037,7 @@ def pagina_usuario(indice):
 def pagina_moderador(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0], [1, 2, 3])
+		opcion = ingresar_menu(menu_mod, [0, 2], [1, 3])
 
 		if opcion == 0:
 			cerrar_sesion()
@@ -1025,8 +1046,8 @@ def pagina_moderador(indice):
 			sub_opcion = ingresar_submenu(menu_mod1, ['a', 'b'])
 			if sub_opcion == 'a': desactivar_usuario() 	
 		elif opcion == 2:
-			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
-			if sub_opcion == 'a': ver_reportes(indice, 'mod')
+			sub_opcion = ingresar_submenu(menu_mod2)
+			if sub_opcion == 'a': ver_reportes(indice, 1)
 
 def pagina_admin(indice):
 	salir = False
@@ -1042,7 +1063,7 @@ def pagina_admin(indice):
 			elif sub_opcion == 'c': desactivar_usuario_moderador()
 		elif opcion == 2:
 			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
-			if sub_opcion == 'a': ver_reportes(indice, 'admin')
+			if sub_opcion == 'a': ver_reportes(indice, 2)
 		elif opcion == 3:
 			reportes_est_admin(True)
 			input('\n\n Presione ENTER ')
