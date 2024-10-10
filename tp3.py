@@ -67,14 +67,14 @@ menu_mod2 = '''
 '''
 
 menu_admin1 = '''
- --------------------------------------
- | Gestionar usuarios                 |
- |                                    |
- | a. Desactivar usuario o moderador  |
- | b. Dar de alta moderador           |
- | c. Desactivar usuario              |
- | d. Volver                          |
- --------------------------------------
+ ------------------------------------
+ | Gestionar usuarios               |
+ |                                  |
+ | a. Eliminar usuario o moderador  |
+ | b. Dar de alta moderador         |
+ | c. Desactivar usuario            |
+ | d. Volver                        |
+ ------------------------------------
 '''
 
 menu_inicio = '''
@@ -127,6 +127,11 @@ class Reporte:
 		self.estado = 0
 		self.rol = 0
 
+class Like:
+    def __init__(self):
+        self.id_remitente = 0
+        self.id_destinatario = 0
+
 class Cookie:
 	def __init__(self):
 		self.time = None
@@ -143,7 +148,6 @@ afLikes = './data/likes.dat'
 afReportes = './data/reportes.dat'
 afCookie = './data/cookie.dat'
 
-likes = [[0]*20 for n in range(20)]
 cookie = Cookie()
 cant_usuarios, cant_moderadores, cant_reportes = 0, 0, 0
 
@@ -202,7 +206,31 @@ def inicializacion(test=False):
 		pickle.dump(administrador, alAdmins)
 		alAdmins.close()
 	
-	# Carga de matriz de likes pendiente
+	# Carga de likes 
+	if not os.path.exists(afLikes):
+		alLikes = open(afLikes, "w+b")
+		if test: #Generar likes aleatorios sin repetir
+			for _ in range((cant_usuarios-1) * (cant_usuarios-2)):
+				repetido = True
+				while repetido:
+					like = Like()
+					like.id_remitente, like.id_destinatario = 0, 0
+					while like.id_remitente == like.id_destinatario:
+						like.id_remitente = randint(0, cant_usuarios-1)
+						like.id_destinatario = randint(0, cant_usuarios-1)
+					
+					repetido = False
+
+					if os.path.getsize(afLikes) > 0:
+						alLikes.seek(0, 0)
+						while alLikes.tell() < os.path.getsize(afLikes) and not repetido:
+							reg = pickle.load(alLikes)
+							if (reg.id_remitente == like.id_remitente) and \
+							   (reg.id_destinatario == like.id_destinatario): repetido = True
+
+				alLikes.seek(0, 2)
+				pickle.dump(like, alLikes)
+			alLikes.close()
 
 	# Carga de reportes
 	if os.path.exists(afReportes):
@@ -210,10 +238,14 @@ def inicializacion(test=False):
 	else:
 		alReportes = open(afReportes, "w+b")
 		if test:
-			for n in range(20):
+			for _ in range(20):
 				reporte = Reporte()
-				reporte.id_reportante = randint(0, cant_usuarios-1)
-				reporte.id_reportado = randint(0, cant_usuarios-1)
+
+				reporte.id_reportante, reporte.id_reportado = 0, 0
+				while reporte.id_reportante == reporte.id_reportado:
+					reporte.id_reportante = randint(0, cant_usuarios-1)
+					reporte.id_reportado = randint(0, cant_usuarios-1)
+
 				reporte.motivo = ' '.ljust(255, ' ')
 				reporte.id_responsable = randint(0, cant_moderadores-1)
 				reporte.estado = randint(0, 2)
@@ -245,6 +277,44 @@ def ptos_suspensivos(mensaje=' Saliendo'):
 		sleep(1)
 		print('.', end='', flush=True)
 	sleep(2)
+
+##LIKES
+def agregar_like(id_remitente, id_destinatario):
+	alLikes = open(afLikes, "r+b")
+	like = Like()
+	like.id_remitente = id_remitente
+	like.id_destinatario = id_destinatario
+	
+	alLikes.seek(0,2)
+	pickle.dump(like, alLikes)
+
+	alLikes.close()
+
+def verificar_like(id_remitente, id_destinatario):
+	if os.path.exists(afLikes):
+		alLikes = open(afLikes, "r+b")
+		tam = os.path.getsize(afLikes)
+
+		while alLikes.tell() < tam:
+			reg = pickle.load(alLikes)
+			if reg.id_remitente == id_remitente and reg.id_destinatario == id_destinatario:
+				alLikes.close()
+				return True
+		alLikes.close()
+	return False
+def verificar_match(id_usuario1, id_usuario2):
+	if os.path.exists(afLikes):
+		alLikes = open(afLikes, "r+b")
+		tam = os.path.getsize(afLikes)
+
+		while alLikes.tell() < tam:
+			reg = pickle.load(alLikes)
+			if (reg.id_remitente == id_usuario1 and reg.id_destinatario == id_usuario2) or \
+				(reg.id_remitente == id_usuario2 and reg.id_destinatario == id_usuario1):
+				alLikes.close()
+				return True
+		alLikes.close()
+	return False
 
 ##ARCHIVOS
 def contar_registros(AF):
@@ -567,26 +637,35 @@ def ver_candidatos(indice):
 			us_registrado = reg
 		elif reg.estado:
 			mostrar_usuario(reg)
-			print(reg.estado)
 
-	while True:
-		me_gusta = input('\n Ingrese el nombre de un estudiante: ').capitalize()
+	encontrado = False
+	while not encontrado:
+		me_gusta = input(' Ingrese el nombre de un estudiante para dar like: ').capitalize()
 
-		alUsuarios.seek(0)
-		while alUsuarios.tell() < os.path.getsize(afUsuarios):
+		alUsuarios.seek(0, 0)
+		while alUsuarios.tell() < os.path.getsize(afUsuarios) and not encontrado:
 			reg = pickle.load(alUsuarios)
-			if reg.nombre.strip() == me_gusta and reg.estado and us_registrado.nombre.strip() != me_gusta:
-				likes[indice][reg.id] = 1
-				alLikes = open(afLikes, "w+b")
-				pickle.dump(likes, alLikes)
-				alLikes.close()
+			if reg.nombre.strip() == me_gusta and us_registrado.nombre.strip() != me_gusta: 
+				encontrado = True
+				
+				if verificar_like(indice, reg.id):
+					print('\n Ya le dio like a este usuario')
+				
+				elif not reg.estado:
+					mensaje_error('El usuario ya no está disponible')
 
-				print('\n Usuario guardado como posible match')
+				else:
+					agregar_like(indice, reg.id)
+					print('\n Usuario guardado como posible match')
+				
 				sleep(1.5)
 				ptos_suspensivos()
-				return 0
-		mensaje_error('El nombre no coincide con ningun usuario')
 
+		if not encontrado:
+			mensaje_error('El nombre no coincide con ningún usuario')
+
+	alUsuarios.close()
+	
 def reportar_candidato(indice):
 	global cant_reportes
 	
@@ -653,35 +732,40 @@ def reportar_candidato(indice):
 
 def reportes_est(indice, test=False):
 	limpiar()
-	cont, match, ida, vuelta = 0, 0, 0, 0
+	total_candidatos, match, likes_dados, likes_recibidos = 0, 0, 0, 0
 
 	if test:
-		print('      ', end='', flush=True)
-		for n in range(cant_usuarios): print(n, ' ', end='', flush=True)
-		print('\n     ', end='', flush=True)
-		for n in range(cant_usuarios): print(' - ', end='', flush=True)
-		print('')
+		alLikes = open(afLikes, "r+b")
+		print(' remitente | destinatario\n--------------------------')
+		while alLikes.tell() < os.path.getsize(afLikes):
+			reg = pickle.load(alLikes)
+			if reg.id_remitente == indice or reg.id_destinatario == indice: 
+				print(f'     {reg.id_remitente}     |      {reg.id_destinatario}')
+		alLikes.close()
+	
+	if os.path.exists(afUsuarios): 
+		alUsuarios = open(afUsuarios, "r+b")
+		while alUsuarios.tell() < os.path.getsize(afUsuarios):
+			reg = pickle.load(alUsuarios)
 
-	for i in range(cant_usuarios):
-		if test: print(f' {i} |', end='', flush=True)
-		for e in range(cant_usuarios): 
-			if test: 
-				if likes[i][e] != -1: print(' ', likes[i][e], end='', flush=True)
-				else: print(' ', '\x1b[1;31m'+'x'+'\033[0;m', end='', flush=True)
+			if reg.id != indice and reg.estado: 
+				total_candidatos += 1
+				
+				if verificar_match(indice, reg.id): match += 1
+				if verificar_like(indice, reg.id):  likes_dados += 1
+				if verificar_like(reg.id, indice): likes_recibidos += 1
+		
+		alUsuarios.close()
 
-			if likes[i][e] != -1 and i == indice: cont += 1
-		if test: print('')
-
-	for i in range(cant_usuarios):
-		if i != indice:
-			if likes[indice][i] == 1 and likes[i][indice] == 1: match += 1
-			elif likes[indice][i] == 1: ida += 1
-			elif likes[i][indice] == 1: vuelta += 1
+	if total_candidatos > 0:
+		porcentaje_matcheados = (match * 100) / total_candidatos
+	else:
+		porcentaje_matcheados = 0
 
 	print(
-		f'\n\n* Matcheados sobre el % posible: %{int((match*100)/cont)}\n'
-		f'* Likes dados y no recibidos: {ida}\n'
-		f'* Likes recibidos y no respondidos: {vuelta}'
+		f'\n\n* Matcheados sobre el % posible: %{porcentaje_matcheados}\n'
+		f'* Likes dados y no recibidos: {likes_dados}\n'
+		f'* Likes recibidos y no respondidos: {likes_recibidos}'
 	)
 
 ##MODERADOR
@@ -1048,7 +1132,7 @@ def cerrar_sesion():
 def pagina_usuario(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu, construccion=[3, 4])
+		opcion = ingresar_menu(menu, construccion=[3])
 
 		match opcion:
 			case 0:
@@ -1087,7 +1171,7 @@ def pagina_moderador(indice):
 def pagina_admin(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0, 2, 3], [1])
+		opcion = ingresar_menu(menu_mod, [0, 1, 2, 3])
 
 		if opcion == 0:
 			cerrar_sesion()
@@ -1129,7 +1213,7 @@ while opcion != 0:
 		print(menu_inicio)
 		
 		try:
-			opcion = int(input(' Ingrese una opción: '))
+			opcion = int(input('\n Ingrese una opción: '))
 			if opcion > 5 or opcion < 0: mensaje_error('La opción no es válida')
 			elif opcion == 1: 
 				opc_modo = 0
