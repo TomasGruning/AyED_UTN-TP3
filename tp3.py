@@ -481,19 +481,6 @@ def signup():
 	pickle.dump(us, alUsuarios)
 	alUsuarios.close()
 
-	# Actualiza la matriz de likes
-	for n in range(cant_usuarios):
-		if n == cant_usuarios-1:
-			likes[n][n] = -1
-		else:
-			likes[n][cant_usuarios] = 0
-			likes[cant_usuarios][n] = 0
-
-	alLikes = open(afLikes, "r+b")
-	pickle.dump(likes, alLikes)
-	alLikes.close()
-	#
-
 	print('\n Registrado')
 	sleep(1)
 	ptos_suspensivos(' Ingresando')
@@ -880,7 +867,8 @@ def ver_reportes(indice, rol):
 		ptos_suspensivos()
 
 ##ADMINISTRADOR
-def desactivar_usuario_moderador():
+# Pendiente para consulta
+def eliminar_usuario_moderador():
 	salir = False
 	while not salir:
 		limpiar()
@@ -901,18 +889,25 @@ def desactivar_usuario_moderador():
 					desactivar_usuario()
 				elif opc == 2:
 					limpiar()
+					alModeradores = open(afModeradores, "r+b")
+					tam = os.path.getsize(afModeradores)
+
 					while not salir:
 						elim = input(' Ingrese el ID del moderador: ')
 						try:
 							elim = int(elim)
-							if elim < cant_moderadores and elim >= 0 and moderadores[elim].estado == 'ACTIVO': 
-								print(
-									f'\n  ID: {moderadores[elim].id}'
-									f'\n  Email: {moderadores[elim].email}\n'
-								)
+							if elim < cant_moderadores and elim >= 0:
+								alModeradores.seek(buscar_usuario(afModeradores, elim), 0)
+								reg = pickle.load(alModeradores)
 
-								eliminar_perfil(elim, 'mod')
-								salir = True
+								if reg.estado: 
+									print(
+										f'\n  ID: {reg.id}'
+										f'\n  Email: {reg.email}\n'
+									)
+
+									eliminar_perfil(elim, 'mod')
+									salir = True
 							
 							if not salir: mensaje_error('No se encontro el ID del moderador')
 						except ValueError:
@@ -924,25 +919,28 @@ def desactivar_usuario_moderador():
 
 def alta_moderador():
 	global cant_moderadores
+
 	limpiar()
 	print(' Nuevo moderador  |')
 	print('-------------------\n')
 
 	email = input(' Ingrese el email: ')
-	while email_rep(email):
+	while email_rep(afUsuarios, email) or email_rep(afModeradores, email) or email_rep(afAdmins, email):
 		mensaje_error('El email ya se encuentra registrado')
 		email = input(' Ingrese otro email: ')
 
 	contraseña = input(' Ingrese la contraseña: ')
 
-	moderadores[cant_moderadores].id = cant_moderadores
-	moderadores[cant_moderadores].estado = 'ACTIVO'
-	moderadores[cant_moderadores].email = email
-	moderadores[cant_moderadores].contraseña = contraseña
+	moderador = Moderador()
+	moderador.id = cant_moderadores
+	moderador.estado = 'ACTIVO'
+	moderador.email = email
+	moderador.contraseña = contraseña
 	cant_moderadores += 1
 
-	alModeradores = open(afModeradores, "w+b")
-	pickle.dump(moderadores, alModeradores)
+	alModeradores = open(afModeradores, "r+b")
+	alModeradores.seek(0, 2)
+	pickle.dump(moderador, alModeradores)
 	alModeradores.close()
 
 	print('\n Registrado')
@@ -954,7 +952,6 @@ def mayor_contador(arr):
 	for i in range(1, len(arr)):
 		if arr[i] > arr[i-1]: indice = i
 	return indice
-# Sin testear
 def reportes_est_admin(test=False):
 	reportes_ignorados, reportes_aceptados, cant_reportes_mods = 0, 0, 0
 	acciones_reportes = [[0]*cant_moderadores for n in range(2)]
@@ -1177,9 +1174,10 @@ def pagina_admin(indice):
 			cerrar_sesion()
 			salir = True
 		elif opcion == 1:
-			sub_opcion = ingresar_submenu(menu_admin1, ['d'], ['a', 'b', 'c'])
-			if sub_opcion == 'b': alta_moderador()
-			elif sub_opcion == 'c': desactivar_usuario_moderador()
+			sub_opcion = ingresar_submenu(menu_admin1, ['b', 'c', 'd'], ['a'])
+			if sub_opcion == 'a': eliminar_usuario_moderador()
+			elif sub_opcion == 'b': alta_moderador()
+			elif sub_opcion == 'c': desactivar_usuario()
 		elif opcion == 2:
 			sub_opcion = ingresar_submenu(menu_mod2, ['a', 'b'])
 			if sub_opcion == 'a': ver_reportes(indice, 2)
