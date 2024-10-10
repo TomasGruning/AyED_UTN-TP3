@@ -1,4 +1,4 @@
-# TP3 - Tomás Gruning, Lucía Godoy, Joaquin Raffaelli
+# TP3 - Tomás Gruning, Lucía Godoy, Joaquin Raffaelli, Baremboum Micaela, Rafael Ghione Nazabal
 import random
 import pickle
 import io
@@ -210,13 +210,13 @@ def inicializacion(test=False):
 	else:
 		alReportes = open(afReportes, "w+b")
 		if test:
-			for n in range(3):
+			for n in range(20):
 				reporte = Reporte()
 				reporte.id_reportante = randint(0, cant_usuarios-1)
-				reporte.id_reportado = 0#randint(0, cant_usuarios-1)
+				reporte.id_reportado = randint(0, cant_usuarios-1)
 				reporte.motivo = ' '.ljust(255, ' ')
-				#reporte.id_responsable = randint(0, cant_moderadores-1)
-				#reporte.estado = randint(0, 2)
+				reporte.id_responsable = randint(0, cant_moderadores-1)
+				reporte.estado = randint(0, 2)
 				
 				pickle.dump(reporte, alReportes)
 				cant_reportes += 1
@@ -428,7 +428,7 @@ def signup():
 	sleep(1)
 	ptos_suspensivos(' Ingresando')
 	return cant_usuarios-1
-	
+
 ##MENUS
 def ingresar_menu(menu: str, opciones=[0, 1, 2, 3, 4], construccion=[]):
 	limpiar()
@@ -876,23 +876,44 @@ def reportes_est_admin(test=False):
 	acciones_reportes = [[0]*cant_moderadores for n in range(2)]
 	acciones_total_reportes = [0 for n in range(cant_moderadores)]
 
-	for i in range(cant_reportes):
-		if reportes[i].rol != 'admin': cant_reportes_mods += 1
+	alReportes = open(afReportes, "r+b")
+	while alReportes.tell() < os.path.getsize(afReportes):
+		reg = pickle.load(alReportes)
+		if reg.rol != 'admin': cant_reportes_mods += 1
 
 	limpiar()
 	if cant_reportes > 0:
-		for i in range(cant_reportes):
-			if reportes[i].rol != 'admin':
-				if reportes[i].estado == 1: 
-					reportes_ignorados += 1
-					acciones_reportes[0][reportes[i].id_responsable] += 1
+		alReportes.seek(0, 0)
+		while alReportes.tell() < os.path.getsize(afReportes):
+			reg = pickle.load(alReportes)
 
-				if reportes[i].estado == 2: 
+			if reg.rol != 'admin':
+				if reg.estado == 1: 
+					reportes_ignorados += 1
+					acciones_reportes[0][reg.id_responsable] += 1
+
+				elif reg.estado == 2: 
 					reportes_aceptados += 1
-					acciones_reportes[1][reportes[i].id_responsable] += 1
+					acciones_reportes[1][reg.id_responsable] += 1
+		alReportes.close()
 		
 		for i in range(cant_moderadores):
 			acciones_total_reportes[i] = acciones_reportes[0][i] + acciones_reportes[1][i]
+		
+		posMRI = buscar_usuario(afModeradores, mayor_contador(acciones_reportes[0]))
+		posMRA = buscar_usuario(afModeradores, mayor_contador(acciones_reportes[1]))
+		posMRP = buscar_usuario(afModeradores, mayor_contador(acciones_total_reportes))
+
+		alModeradores = open(afModeradores, "r+b")
+		alModeradores.seek(posMRI, 0)
+		moderadorMRI = pickle.load(alModeradores).email
+
+		alModeradores.seek(posMRA, 0)	
+		moderadorMRA = pickle.load(alModeradores).email
+		
+		alModeradores.seek(posMRP, 0)
+		moderadorMRP = pickle.load(alModeradores).email
+		alModeradores.close()
 
 		if test:
 			print(acciones_reportes[0])
@@ -902,11 +923,13 @@ def reportes_est_admin(test=False):
 			f'\n* Cantidad de reportes: {cant_reportes}\n'
 			f'* % de reportes ignorados por moderadores: %{int((reportes_ignorados*100)/cant_reportes_mods)}\n'
 			f'* % de reportes aceptados por moderadores: %{int((reportes_aceptados*100)/cant_reportes_mods)}\n\n'
-			f'* Moderador con mas reportes ignorados: {moderadores[mayor_contador(acciones_reportes[0])].email}\n'
-			f'* Moderador con mas reportes aceptados: {moderadores[mayor_contador(acciones_reportes[1])].email}\n'
-			f'* Moderador con mas reportes procesados: {moderadores[mayor_contador(acciones_total_reportes)].email}'
+			f'* Moderador con mas reportes ignorados: {moderadorMRI}\n'
+			f'* Moderador con mas reportes aceptados: {moderadorMRA}\n'
+			f'* Moderador con mas reportes procesados: {moderadorMRP}'
 		)
-	else: print('\n No hay reportes')
+	else: 
+		print('\n No hay reportes')
+		ptos_suspensivos()
 
 ##BONUS 
 def ingresar_probabilidad():
@@ -1064,7 +1087,7 @@ def pagina_moderador(indice):
 def pagina_admin(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0], [1, 2, 3])
+		opcion = ingresar_menu(menu_mod, [0, 2, 3], [1])
 
 		if opcion == 0:
 			cerrar_sesion()
