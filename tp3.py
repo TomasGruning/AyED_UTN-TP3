@@ -108,7 +108,7 @@ class Usuario:
 class Moderador:
 	def __init__(self):
 		self.id = -1
-		self.estado = False
+		self.estado = True
 		self.email = ' '.ljust(32, ' ')
 		self.contraseña = ' '.ljust(32, ' ')
 
@@ -152,6 +152,30 @@ cookie = Cookie()
 cant_usuarios, cant_moderadores, cant_reportes = 0, 0, 0
 
 #FUNCIONES
+def generar_likes(test):
+	alLikes = open(afLikes, "w+b")
+	if test:
+		for _ in range((cant_usuarios-1) * (cant_usuarios-2)):
+			repetido = True
+			while repetido:
+				like = Like()
+				like.id_remitente, like.id_destinatario = 0, 0
+				while like.id_remitente == like.id_destinatario:
+					like.id_remitente = randint(0, cant_usuarios-1)
+					like.id_destinatario = randint(0, cant_usuarios-1)
+				
+				repetido = False
+
+				if os.path.getsize(afLikes) > 0:
+					alLikes.seek(0, 0)
+					while alLikes.tell() < os.path.getsize(afLikes) and not repetido:
+						reg = pickle.load(alLikes)
+						if (reg.id_remitente == like.id_remitente) and \
+							(reg.id_destinatario == like.id_destinatario): repetido = True
+
+			alLikes.seek(0, 2)
+			pickle.dump(like, alLikes)
+		alLikes.close()
 def inicializacion(test=False):
 	global usuarios, moderadores, administradores, likes, reportes, cookie 
 	global cant_usuarios, cant_moderadores, cant_reportes
@@ -207,30 +231,7 @@ def inicializacion(test=False):
 		alAdmins.close()
 	
 	# Carga de likes 
-	if not os.path.exists(afLikes):
-		alLikes = open(afLikes, "w+b")
-		if test: #Generar likes aleatorios sin repetir
-			for _ in range((cant_usuarios-1) * (cant_usuarios-2)):
-				repetido = True
-				while repetido:
-					like = Like()
-					like.id_remitente, like.id_destinatario = 0, 0
-					while like.id_remitente == like.id_destinatario:
-						like.id_remitente = randint(0, cant_usuarios-1)
-						like.id_destinatario = randint(0, cant_usuarios-1)
-					
-					repetido = False
-
-					if os.path.getsize(afLikes) > 0:
-						alLikes.seek(0, 0)
-						while alLikes.tell() < os.path.getsize(afLikes) and not repetido:
-							reg = pickle.load(alLikes)
-							if (reg.id_remitente == like.id_remitente) and \
-							   (reg.id_destinatario == like.id_destinatario): repetido = True
-
-				alLikes.seek(0, 2)
-				pickle.dump(like, alLikes)
-			alLikes.close()
+	if not os.path.exists(afLikes): generar_likes(test)
 
 	# Carga de reportes
 	if os.path.exists(afReportes):
@@ -933,7 +934,6 @@ def alta_moderador():
 
 	moderador = Moderador()
 	moderador.id = cant_moderadores
-	moderador.estado = 'ACTIVO'
 	moderador.email = email
 	moderador.contraseña = contraseña
 	cant_moderadores += 1
@@ -1104,8 +1104,11 @@ def edades_bonus():
 	
 def matcheos_comb_bonus():
 	cont = 0
-	for i in range(cant_usuarios):
-		if usuarios[i].estado == 'ACTIVO': cont += 1
+	alUsuarios = open(afUsuarios, "r+b")
+	while afUsuarios.tell() < os.path.getsize(afUsuarios):
+		reg = pickle.load(alUsuarios)
+		if reg.estado: cont += 1
+	alUsuarios.close()
 	
 	limpiar()
 	matcheos = cont * (cont - 1)
