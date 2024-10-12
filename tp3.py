@@ -66,6 +66,17 @@ menu_mod2 = '''
  ------------------------
 '''
 
+menu_admin = '''
+ ------------------------------
+ | 1. Gestionar usuarios      |
+ | 2. Gestionar reportes      |
+ | 3. Reportes estadisticos   |
+ | (Bonus)                    |
+ | 4. Puntajes candidatos     |
+ |                            |
+ | 0. Cerrar Sesion           |
+ ------------------------------
+'''
 menu_admin1 = '''
  ------------------------------------
  | Gestionar usuarios               |
@@ -307,15 +318,17 @@ def verificar_match(id_usuario1, id_usuario2):
 	if os.path.exists(afLikes):
 		alLikes = open(afLikes, "r+b")
 		tam = os.path.getsize(afLikes)
+		ida, vuelta = False, False
 
-		while alLikes.tell() < tam:
+		while alLikes.tell() < tam and (not ida or not vuelta):
 			reg = pickle.load(alLikes)
-			if (reg.id_remitente == id_usuario1 and reg.id_destinatario == id_usuario2) or \
-				(reg.id_remitente == id_usuario2 and reg.id_destinatario == id_usuario1):
-				alLikes.close()
-				return True
+			if reg.id_remitente == id_usuario1 and reg.id_destinatario == id_usuario2:
+				ida = True
+			if reg.id_remitente == id_usuario2 and reg.id_destinatario == id_usuario1:
+				vuelta = True
 		alLikes.close()
-	return False
+	
+	return ida and vuelta
 
 ##ARCHIVOS
 def contar_registros(AF):
@@ -740,8 +753,9 @@ def reportes_est(indice, test=False):
 				total_candidatos += 1
 				
 				if verificar_match(indice, reg.id): match += 1
-				if verificar_like(indice, reg.id):  likes_dados += 1
-				if verificar_like(reg.id, indice): likes_recibidos += 1
+				else:
+					if verificar_like(indice, reg.id): likes_dados += 1
+					if verificar_like(reg.id, indice): likes_recibidos += 1
 		
 		alUsuarios.close()
 
@@ -1012,6 +1026,52 @@ def reportes_est_admin(test=False):
 		print('\n No hay reportes')
 		ptos_suspensivos()
 
+	input('\n\n Presione ENTER ')
+
+def bubble_sort_puntos(puntajes):
+    for i in range(len(puntajes) - 1):
+        for j in range(len(puntajes) - 1 - i):
+            if puntajes[j][1] < puntajes[j + 1][1]:
+                puntajes[j], puntajes[j + 1] = puntajes[j + 1], puntajes[j]
+def ptos_candidatos(test=False):
+	# 0 -> n: el ID del usuario
+	# 1 -> 0: el puntaje inicial
+	# 2 -> 0: la racha inicial
+	puntajes = [[n, 0, 0] for n in range(cant_usuarios)]
+
+	limpiar()
+	if test:
+		alLikes = open(afLikes, "r+b")
+		print(' remitente | destinatario\n--------------------------')
+		while alLikes.tell() < os.path.getsize(afLikes):
+			reg = pickle.load(alLikes)
+			print(f'     {reg.id_remitente}     |      {reg.id_destinatario}')
+		alLikes.close()
+	
+	alLikes = open(afLikes, "r+b")
+	while alLikes.tell() < os.path.getsize(afLikes):
+		reg = pickle.load(alLikes)
+
+		if verificar_match(reg.id_remitente, reg.id_destinatario):
+			if puntajes[reg.id_remitente][2] >= 3:
+				puntajes[reg.id_remitente][1] += 2
+			else: 
+				puntajes[reg.id_remitente][1] += 1
+
+			puntajes[reg.id_remitente][2] += 1
+		else:
+			puntajes[reg.id_remitente][1] -= 1
+			puntajes[reg.id_remitente][2] = 0
+	
+	alLikes.close()
+	bubble_sort_puntos(puntajes)
+
+	print('\n  ID | puntaje\n---------------')
+	for n in range(len(puntajes)):
+		print(f'  {puntajes[n][0]}  |   {puntajes[n][1]}')
+
+	input('\n\n Presione ENTER ')
+
 ##BONUS 
 def ingresar_probabilidad():
 	limpiar()
@@ -1171,7 +1231,7 @@ def pagina_moderador(indice):
 def pagina_admin(indice):
 	salir = False
 	while not salir:
-		opcion = ingresar_menu(menu_mod, [0, 1, 2, 3])
+		opcion = ingresar_menu(menu_admin, [0, 1, 2, 3, 4])
 
 		if opcion == 0:
 			cerrar_sesion()
@@ -1186,7 +1246,8 @@ def pagina_admin(indice):
 			if sub_opcion == 'a': ver_reportes(indice, 2)
 		elif opcion == 3:
 			reportes_est_admin(True)
-			input('\n\n Presione ENTER ')
+		elif opcion == 4:
+			ptos_candidatos()
 
 def crear_cookie(id, rol):
 	global cookie
