@@ -1,4 +1,6 @@
 # TP3 - Tomás Gruning, Lucía Godoy, Joaquin Raffaelli, Baremboum Micaela, Rafael Ghione Nazabal
+# Repositorio - https://github.com/TomasGruning/AyED_UTN-TP3
+
 import random
 import pickle
 import io
@@ -36,8 +38,8 @@ menu2 = '''
  | Gestionar candidatos       |
  |                            |
  | a. Ver candidatos          |
- | b. Reportar un candidato   |
- | c. Superlike               |
+ | b. Superlike               |
+ | c. Reportar un candidato   |
  | d. Volver                  |
  ------------------------------
 '''
@@ -1029,50 +1031,6 @@ def reportes_est_admin(test=False):
 
 	input('\n\n Presione ENTER ')
 
-def bubble_sort_puntos(puntajes):
-    for i in range(len(puntajes) - 1):
-        for j in range(len(puntajes) - 1 - i):
-            if puntajes[j][1] < puntajes[j + 1][1]:
-                puntajes[j], puntajes[j + 1] = puntajes[j + 1], puntajes[j]
-def ptos_candidatos(test=False):
-	# 0 -> n: el ID del usuario
-	# 1 -> 0: el puntaje inicial
-	# 2 -> 0: la racha inicial
-	puntajes = [[n, 0, 0] for n in range(cant_usuarios)]
-
-	limpiar()
-	if test:
-		alLikes = open(afLikes, "r+b")
-		print(' remitente | destinatario\n--------------------------')
-		while alLikes.tell() < os.path.getsize(afLikes):
-			reg = pickle.load(alLikes)
-			print(f'     {reg.id_remitente}     |      {reg.id_destinatario}')
-		alLikes.close()
-	
-	alLikes = open(afLikes, "r+b")
-	while alLikes.tell() < os.path.getsize(afLikes):
-		reg = pickle.load(alLikes)
-
-		if verificar_match(reg.id_remitente, reg.id_destinatario):
-			if puntajes[reg.id_remitente][2] >= 3:
-				puntajes[reg.id_remitente][1] += 2
-			else: 
-				puntajes[reg.id_remitente][1] += 1
-
-			puntajes[reg.id_remitente][2] += 1
-		else:
-			puntajes[reg.id_remitente][1] -= 1
-			puntajes[reg.id_remitente][2] = 0
-	
-	alLikes.close()
-	bubble_sort_puntos(puntajes)
-
-	print('\n  ID | puntaje\n---------------')
-	for n in range(len(puntajes)):
-		print(f'  {puntajes[n][0]}  |   {puntajes[n][1]}')
-
-	input('\n\n Presione ENTER ')
-
 ##BONUS 
 def ingresar_probabilidad():
 	limpiar()
@@ -1178,6 +1136,50 @@ def matcheos_comb_bonus():
 
 	input('\n\nPresione ENTER  ')
 
+def bubble_sort_puntos(puntajes):
+    for i in range(len(puntajes) - 1):
+        for j in range(len(puntajes) - 1 - i):
+            if puntajes[j][1] < puntajes[j + 1][1]:
+                puntajes[j], puntajes[j + 1] = puntajes[j + 1], puntajes[j]
+def ptos_candidatos(test=False):
+	# 0 -> n: el ID del usuario
+	# 1 -> 0: el puntaje inicial
+	# 2 -> 0: la racha inicial
+	puntajes = [[n, 0, 0] for n in range(cant_usuarios)]
+
+	limpiar()
+	if test:
+		alLikes = open(afLikes, "r+b")
+		print(' remitente | destinatario\n--------------------------')
+		while alLikes.tell() < os.path.getsize(afLikes):
+			reg = pickle.load(alLikes)
+			print(f'     {reg.id_remitente}     |      {reg.id_destinatario}')
+		alLikes.close()
+	
+	alLikes = open(afLikes, "r+b")
+	while alLikes.tell() < os.path.getsize(afLikes):
+		reg = pickle.load(alLikes)
+
+		if verificar_match(reg.id_remitente, reg.id_destinatario):
+			if puntajes[reg.id_remitente][2] >= 3:
+				puntajes[reg.id_remitente][1] += 2
+			else: 
+				puntajes[reg.id_remitente][1] += 1
+
+			puntajes[reg.id_remitente][2] += 1
+		else:
+			puntajes[reg.id_remitente][1] -= 1
+			puntajes[reg.id_remitente][2] = 0
+	
+	alLikes.close()
+	bubble_sort_puntos(puntajes)
+
+	print('\n  ID | puntaje\n---------------')
+	for n in range(len(puntajes)):
+		print(f'  {puntajes[n][0]}  |   {puntajes[n][1]}')
+
+	input('\n\n Presione ENTER ')
+
 def bonus_superlike(indice):
 	limpiar()
 	alUsuarios = open(afUsuarios, "r+b")
@@ -1258,10 +1260,10 @@ def pagina_usuario(indice):
 						cerrar_sesion()
 						salir = True
 			case 2:
-				sub_opcion = ingresar_submenu(menu2)
+				sub_opcion = ingresar_submenu(menu2, ['a', 'b', 'c', 'd'])
 				if sub_opcion == 'a': ver_candidatos(indice)
-				elif sub_opcion == 'b': reportar_candidato(indice) 
-				elif sub_opcion == 'c': bonus_superlike(indice)   
+				elif sub_opcion == 'b': bonus_superlike(indice)   
+				elif sub_opcion == 'c': reportar_candidato(indice) 
 			case 4:
 				reportes_est(indice, True)
 				input('\n\n Presione ENTER ')

@@ -209,7 +209,7 @@ Además de todo lo referido a moderadores, se pedirá en esta tercera etapa agre
   <li><Strong>Reportes Estadisticos</Strong></li>
 </ol><br/>
 
-**1.a Eliminar un usuario:** se desea eliminar del archivo (borrado físico) a un usuario, ya sea estudiante o moderador. Un administrador NO podrá borrar otros administradores. 
+**1.a Eliminar un usuario:** se desea eliminar del archivo (borrado lógico) a un usuario, ya sea estudiante o moderador. Un administrador NO podrá borrar otros administradores. 
 
 **1.b Dar de alta un moderador:** esta sección será similar a la de “registro”, con la diferencia que sólo los administradores podrán crear desde su menú (una vez logueados) nuevos moderadores. 
 
