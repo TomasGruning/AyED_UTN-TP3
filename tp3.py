@@ -37,7 +37,8 @@ menu2 = '''
  |                            |
  | a. Ver candidatos          |
  | b. Reportar un candidato   |
- | c. Volver                  |
+ | c. Superlike               |
+ | d. Volver                  |
  ------------------------------
 '''
 
@@ -71,7 +72,6 @@ menu_admin = '''
  | 1. Gestionar usuarios      |
  | 2. Gestionar reportes      |
  | 3. Reportes estadisticos   |
- | (Bonus)                    |
  | 4. Puntajes candidatos     |
  |                            |
  | 0. Cerrar Sesion           |
@@ -115,6 +115,7 @@ class Usuario:
 		self.fecha_nacimiento = ' '.ljust(10, ' ')
 		self.biografia = ' '.ljust(255, ' ')
 		self.hobbies = ' '.ljust(255, ' ')
+		self.superlike = 1
 
 class Moderador:
 	def __init__(self):
@@ -197,7 +198,7 @@ def inicializacion(test=False):
 		
 	else:
 		alUsuarios = open(afUsuarios, "w+b")
-		nombres = ['Martin', 'Juila', 'Luis', 'Rafael', 'Laura', 'Juan']
+		nombres = ['Martin', 'Julia', 'Luis', 'Rafael', 'Laura', 'Juan']
 
 		for n in range(len(nombres)): 
 			usuario = Usuario()
@@ -1177,6 +1178,57 @@ def matcheos_comb_bonus():
 
 	input('\n\nPresione ENTER  ')
 
+def bonus_superlike(indice):
+	limpiar()
+	alUsuarios = open(afUsuarios, "r+b")
+	pos = buscar_usuario(afUsuarios, indice)
+	alUsuarios.seek(pos, 0)
+	us_registrado = pickle.load(alUsuarios)
+	
+	if us_registrado.superlike != 1:
+		print('Ya utilizó su superlike')
+		sleep(1.5)
+		ptos_suspensivos()
+
+	else:
+		alUsuarios.seek(0, 0)
+		while alUsuarios.tell() < os.path.getsize(afUsuarios):
+			reg = pickle.load(alUsuarios)
+			if reg.estado and reg.id != indice: mostrar_usuario(reg)
+
+		encontrado = False
+		while not encontrado:
+			me_gusta = input(' Ingrese el nombre de un estudiante para hacer match automaticamente: ').capitalize()
+
+			alUsuarios.seek(0, 0)
+			while alUsuarios.tell() < os.path.getsize(afUsuarios) and not encontrado:
+				reg = pickle.load(alUsuarios)
+				if reg.nombre.strip() == me_gusta and us_registrado.nombre.strip() != me_gusta: 
+					encontrado = True
+					
+					if verificar_like(indice, reg.id):
+						print('\n Ya le dio like a este usuario')
+					
+					elif not reg.estado:
+						mensaje_error('El usuario ya no está disponible')
+
+					else:
+						agregar_like(indice, reg.id)
+						agregar_like(reg.id, indice)
+						print('\n Match realizado!')
+						
+						us_registrado.superlike = 0
+						alUsuarios.seek(pos, 0)
+						pickle.dump(us_registrado,alUsuarios)
+					
+					sleep(1.5)
+					ptos_suspensivos()
+
+			if not encontrado:
+				mensaje_error('El nombre no coincide con ningún usuario')
+
+	alUsuarios.close()
+
 # M A I N
 # opcion, opc_modo:  Integer
 # sub_opcion:        Char
@@ -1208,7 +1260,8 @@ def pagina_usuario(indice):
 			case 2:
 				sub_opcion = ingresar_submenu(menu2)
 				if sub_opcion == 'a': ver_candidatos(indice)
-				elif sub_opcion == 'b': reportar_candidato(indice)    
+				elif sub_opcion == 'b': reportar_candidato(indice) 
+				elif sub_opcion == 'c': bonus_superlike(indice)   
 			case 4:
 				reportes_est(indice, True)
 				input('\n\n Presione ENTER ')
