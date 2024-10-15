@@ -274,7 +274,7 @@ def inicializacion(test=False):
 		alCookie = open(afCookie, "r+b")
 		cookie = pickle.load(alCookie)
 
-		if datetime.now() >= cookie.time:
+		if datetime.now() >= cookie.time + timedelta(hours=vto_horas):
 			os.remove(afCookie)
 		
 		alCookie.close()
@@ -951,8 +951,8 @@ def alta_moderador():
 
 	moderador = Moderador()
 	moderador.id = cant_moderadores
-	moderador.email = email
-	moderador.contraseña = contraseña
+	moderador.email = email.ljust(32, ' ')
+	moderador.contraseña = contraseña.ljust(32, ' ')
 	cant_moderadores += 1
 
 	alModeradores = open(afModeradores, "r+b")
@@ -1305,10 +1305,14 @@ def pagina_admin(indice):
 			ptos_candidatos()
 
 def crear_cookie(id, rol):
-	global cookie
+	cookie = Cookie()
 	cookie.id = id
 	cookie.rol = rol
-	cookie.time = datetime.now() + timedelta(hours=vto_horas)
+	cookie.time = datetime.now()
+
+	alCookie = open(afCookie, "w+b")
+	pickle.dump(cookie, alCookie)
+	alCookie.close()
 
 
 inicializacion(True)
@@ -1338,9 +1342,6 @@ while opcion != 0:
 				if indice != -1:
 					if opc_modo > 0 and opc_modo < 4:
 						crear_cookie(indice, opc_modo)
-						alCookie = open(afCookie, "w+b")
-						pickle.dump(cookie, alCookie)
-						alCookie.close()
 
 						if opc_modo == 1:
 							pagina_usuario(indice)
